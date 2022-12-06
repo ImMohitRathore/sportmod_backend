@@ -44,7 +44,7 @@ exports.userLogin = async (req, res) => {
     return res.send(data);
   
   }else{
-    if (!password || !email || !username || !DOB) {
+    if (!password || !email || !username || !DOB  ) {
       responseData = {
         data: null,
         status: false,

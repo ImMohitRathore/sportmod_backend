@@ -24,6 +24,9 @@ const UserSchema = new mongoose.Schema({
     type: String,
   },
 
+  isOrganizer:{
+    
+  },
   statstics: {
     followers: {
       type: Number,

@@ -55,7 +55,8 @@ try{
         password :password , 
         username : username ,
         DOB : DOB,
-        profile:"../src/assets/profile.jpg"
+        profile:"../src/assets/profile.jpg",
+        isOrganizer : false
 
       }
     })
