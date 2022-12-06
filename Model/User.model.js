@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique:true
   },
   profile : {
     type: String,
@@ -25,7 +26,7 @@ const UserSchema = new mongoose.Schema({
   },
 
   isOrganizer:{
-    
+    type: Boolean, //true - false only
   },
   statstics: {
     followers: {
@@ -44,7 +45,49 @@ const UserSchema = new mongoose.Schema({
       type: String,
     },
   },
+
+  userAbout : {
+
+    favGame:{
+      type:String //will come from game list==========//
+    },
+    user_bio:{
+      type:String // user bio===============//
+     },
+    team_id : {
+      type:String //this for personal team comes from team modal
+     },
+     club_id :{
+      type:String //if the user is organiser=========//
+     }
+
+  },
+
+  userWallet:{
+    type:String
+  },
+
+  userBank : {
+
+    ifscCode:{
+      type:String
+    },
+    accountNo:{
+      type:String
+    },
+    bankName:{
+      type:String
+    },
+    holderName:{
+      type:String
+    }
+
+  },
   createAt: {
+    type: String,
+  },
+
+  updatedAt: {
     type: String,
   },
 });
