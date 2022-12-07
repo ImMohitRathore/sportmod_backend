@@ -7,7 +7,7 @@ var PORT =process.env.PORT
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(require('./route/User.route.js'))
-
+app.use(require('./route/club.route'))
 
 // console.log("port" , PORT); 
 
