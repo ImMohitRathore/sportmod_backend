@@ -10,6 +10,8 @@ exports.to_Be_club_member = async(req, res) => {
 
 //   console.log("aa" , isEmpty);
 
+try{
+
   if (accountInfo != null && !accountInfo.accountNumder ||!accountInfo.IfseCode||!accountInfo.AccountHolderName  || !accountInfo.BranchName  || !user_id ) {
 
     responseData = {
@@ -26,6 +28,10 @@ exports.to_Be_club_member = async(req, res) => {
 
   console.log("ress- > " ,data);
   res.send(data)
+
+}catch(e){
+console.log("e::" , e);
+}
 
 
 

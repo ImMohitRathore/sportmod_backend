@@ -3,7 +3,8 @@ const  tournament_Service = require('../Service/tournament.service')
 
 
 exports.tournament_create = async (req, res) => {
-  console.log("req" , req.body) ;
+  req.body =JSON.parse(req.body.data)
+  // console.log("req" , req.body , req.files) ;
     
   const {
     tu_code,
@@ -73,6 +74,7 @@ exports.tournament_create = async (req, res) => {
   }
 
 
-  const data = await tournament_Service.tournament_create(req.body)
+  const data = await tournament_Service.tournament_create(req)
+  console.log("datrttttt," , data);
 
 };

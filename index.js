@@ -7,8 +7,8 @@ var PORT =process.env.PORT
 const multer  = require('multer');
 const upload = multer();
 app.use(upload.any());
-const fileUpload = require("express-fileupload");
-app.use(fileUpload());
+// const fileUpload = require("express-fileupload");
+// app.use(fileUpload());
 // const bodyParser = require('body-parser')
 // ...
 app.use(bodyParser.text({ type: '/' }));

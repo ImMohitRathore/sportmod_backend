@@ -20,7 +20,7 @@ const TournamentSchema = new mongoose.Schema({
   },
 
   description: {
-    type: Number,
+    type: String,
   },
   organised_by: {//add creater ID
     type: String,
@@ -104,4 +104,4 @@ const TournamentSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("User", TournamentSchema);
+module.exports = mongoose.model("TournamentSchema", TournamentSchema);
