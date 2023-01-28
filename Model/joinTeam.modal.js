@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema({
     type:String //comes from ground modal================//
   },
 
+  status:{},
   createAt: {
     type: String,
   },

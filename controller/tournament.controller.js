@@ -75,6 +75,18 @@ exports.tournament_create = async (req, res) => {
 
 
   const data = await tournament_Service.tournament_create(req)
-  console.log("datrttttt," , data);
+  // console.log("datrttttt," , data);
+  res.send(data)
 
 };
+
+// **************************get_details***************************************
+exports.Tournament_Details = async(req  , res)=>{
+
+  const data = await tournament_Service.tournament_detailsService(req)
+  // console.log("datrttttt," , data);
+  res.json(data)
+
+}
+
+

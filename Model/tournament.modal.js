@@ -19,6 +19,10 @@ const TournamentSchema = new mongoose.Schema({
     type: Object,  //this for letter for multi plae images
   },
 
+  descrption: {
+    type: String,
+  },
+
   description: {
     type: String,
   },

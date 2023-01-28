@@ -6,17 +6,38 @@ const TournamentSchema = require('../Model/tournament.modal')
  
 exports.tournament_create  =async (req)=>{
 // console.log("data" ,req.body);
+let responseData = {};
 
 try {
+
+   const isNotUnique =  await TournamentSchema.find({tu_code : req.body.tu_code})
+  //  console.log(isNotUnique);
+   if(isNotUnique.length){
+    return {
+      data: null,
+      status: false,
+      message: "duplicate Tu code!!!",
+    }
+   } 
     let imageurl = await uploadFromBuffer.uploadFromBuffer(req);
     // console.log("data" , imageurl);
-    let responseData = {};
+       var coverImage = ''
+     var multiImages  = []
+    imageurl.forEach((ele)=>{
+       if (ele.fieldname == 'multiImages'){
+        multiImages.push(ele.url)
+       }else{
+        coverImage = ele.url
+       }
+    })
+
+    // return false
     const tournamentSchema = new TournamentSchema({
         tu_code: req.body.tu_code,
         title: req.body.title,
         subtitle: req.body.subtitle,
-         coverImage: imageurl[0].url,
-        //  multiImages: req.body.multiImages,
+         coverImage:coverImage,
+         multiImages: multiImages,
          description: req.body.description,
          organised_by: req.body.organised_by,
         tm_status: req.body.tm_status,
@@ -45,7 +66,7 @@ try {
     responseData = {
       data: null,
       status: true,
-      message: "otp send  sucessfully",
+      message: "tournament create successfully",
     };
   } catch (e) {
     // console.log(e);
@@ -54,7 +75,25 @@ try {
       status: false,
       message: "data not  sucessfully",
     };
+
   }
-   
+
+
   return responseData;
+}
+
+// ************************get tournamnet details *******************
+exports.tournament_detailsService = async(req)=>{
+  let filterdata = []
+  if(req.body){
+if(req.body.play_venu != ''){ filterdata= await  TournamentSchema.find({'tm_details.play_venu' : req.body.play_venu })}else
+if(req.body.gameType != ''){ filterdata= await  TournamentSchema.find({'tm_details.gameType' : req.body.gameType })}else
+if(req.body.tu_code != ''){ filterdata= await  TournamentSchema.find({tu_code : req.body.tu_code})}
+// if(req.body.startDate != ''){console.log("datasdgfsd1"); filterdata= await  TournamentSchema.find({startDate : req.body.startDate})}
+  }else
+filterdata= await  TournamentSchema.find({})
+console.log(filterdata.length , req.body);
+return filterdata
+
+
 }

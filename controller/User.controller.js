@@ -98,3 +98,43 @@ exports.usernameVerfy = async(req , res)=>{
 const data = await Service.usernameVerfy(req.body.username)
 res.send(data)
 }
+
+
+
+// *********************send freind  request ***********************
+exports.sendFreindRequest = async(req  , res)=>{
+const {userid , senderid  ,profile,name }  = req.body
+if(!userid || !senderid || !profile ||!name){
+  responseData = {
+    data: null,
+    status: false,
+    message: "please fill data properly!!",
+  };
+
+  return res.send(responseData);
+}
+const data = await Service.sendFreindRequest(req)
+res.send(data)
+
+}
+
+
+
+// ***************request approve or deny 
+
+exports.RequestApprove_or_deny =async (req , res)=>{
+ console.log("req "  , req.body);
+  // if(!req.body.senderid  || !req.body.status){
+  //   responseData = {
+  //     data: null,
+  //     status: false,
+  //     message: "please fill data properly!!",
+  //   };
+  
+  //   return res.send(responseData);
+  // }
+  const data = await Service.RequestApprove_or_deny(req)
+  res.send(data)
+  
+}
+

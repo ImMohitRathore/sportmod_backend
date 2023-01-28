@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(require('./route/User.route.js'))
 app.use(require('./route/club.route'))
 app.use(require('./route/tournament.route'))
-
+app.use(require('./route/team.route'))
 // console.log("port" , PORT); 
 
 app.listen(PORT, ()=>{

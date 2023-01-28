@@ -29,6 +29,17 @@ const UserSchema = new mongoose.Schema({
     type: Boolean, //true - false only
   },
   statstics: {
+    freindList :[
+      {
+     senderid:{} , 
+     name : {} , 
+     profile : {},
+     status : {
+      type : Boolean
+     }
+     
+      }
+    ],
     followers: {
       type: Number,
     },
@@ -46,6 +57,19 @@ const UserSchema = new mongoose.Schema({
     },
   },
 
+  teamInfo:{
+    admin_requests :[
+      {
+     senderid:{} , 
+     username : {} , 
+     profile : {},
+     status : {
+      type : Boolean
+     }
+     
+      }
+    ],
+  },
   userAbout : {
 
     favGame:{
