@@ -138,3 +138,22 @@ exports.RequestApprove_or_deny =async (req , res)=>{
   
 }
 
+
+
+// team join request approve or deny 
+
+exports.TeamJoin_RequestApprove_or_deny =async (req , res)=>{
+  console.log("req "  , req.body);
+   // if(!req.body.senderid  || !req.body.status){
+   //   responseData = {
+   //     data: null,
+   //     status: false,
+   //     message: "please fill data properly!!",
+   //   };
+   
+   //   return res.send(responseData);
+   // }
+   const data = await Service.TeamJoin_RequestApprove_or_deny(req)
+   res.send(data)
+   
+ }

@@ -1,4 +1,7 @@
 const User = require("../Model/User.model");
+const JoinTeam = require("../Model/joinTeam.modal");
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId;
 
 exports.User_data_save_before_verify = async (req) => {
   let responseData = {};
@@ -165,24 +168,25 @@ exports.sendFreindRequest = async (req) => {
 exports.RequestApprove_or_deny = async (req) => {
   let responseData = {};
 
+  console.log("datttttt" , req.params.id);
 
   try {
 
 
  
     if (req.body.status==true) {
-      const update = await User.findOneAndUpdate({ "statstics.freindList.senderid": req.body.senderid}, {
+      const update = await User.findOneAndUpdate({ "_id" : req.params.id ,"statstics.freindList.senderid": req.body.senderid}, {
         $set: {
           "statstics.freindList.$.status" : true},
       });
-
+       
       responseData = {
         data: null,
-        status: false,
+        status: true,
         message: "User add to your freind list",
       };
     }else {
-      const update = await User.findOneAndUpdate({"statstics.freindList.senderid": req.body.senderid}, {
+      const update = await User.findOneAndUpdate({ "_id" : req.params.id, "statstics.freindList.senderid": req.body.senderid}, {
         $pull: {
           "statstics.freindList" : {
           "senderid": req.body.senderid,
@@ -212,10 +216,11 @@ exports.RequestApprove_or_deny = async (req) => {
 // Team Join Admin Request ----------------
 
 
-exports.Team_join_request = async (username , req) => {
+exports.Team_join_request = async (adminid , teamid , team_ucode,req) => {
+
   let responseData = {};
 
-// console.log(req.body.username);
+console.log(req.body);
   try {
 
     const query = [
@@ -230,29 +235,38 @@ exports.Team_join_request = async (username , req) => {
      {
          
          $match:{
-             "teamInfo.admin_requests.username" : req.body.username
+             "teamInfo.admin_requests.senderid" : req.body.player_id,
+             "teamInfo.admin_requests.teamid" :  typeof(req.body.team_id) =='object'?  req.body.team_id :ObjectId(req.body.team_id)
              }
          }
     ]
+    // const  res= ObjectId(req.body.teamid)
+    // console.log("data--->" ,query , typeof(req.body.team_id)  ,typeof(res));
+    // return false
+
     const data = await User.aggregate(query) 
 
+
     
-    // console.log("data--->" ,data);
     // return 
+
+    // console.log("valllllllllllllllllllll" , adminid);
     if(data.length==0){
-    const update = await User.findOneAndUpdate(username, {
+    const update = await User.findOneAndUpdate(adminid, {
       $push: {
         "teamInfo.admin_requests" : {
-        "senderid": req.body.senderid,
+        "senderid": req.body.player_id,
         "username": req.body.username,
         "profile": req.body.profile,
+        "team_ucode": team_ucode,
+        "teamid": teamid,
         "status": false,
       }},
     });
 
     responseData = {
       data: update,
-      status: false,
+      status: true,
       message: " team join request send successfully ",
     };
   
@@ -264,6 +278,61 @@ exports.Team_join_request = async (username , req) => {
     };
   }
    
+  } catch (e) {
+    // console.log("");
+    responseData = {
+      data: `something is wrong ${e}`,
+      status: false,
+      message: null,
+    };
+  }
+  return responseData;
+};
+
+
+
+
+
+
+// *********************approve or deny....................
+exports.TeamJoin_RequestApprove_or_deny = async (req) => {
+  let responseData = {};
+
+
+  try {
+
+
+ 
+    if (req.body.status==true) {
+      const update = await User.findOneAndUpdate({  "_id" : req.params.id ,"teamInfo.admin_requests.senderid": req.body.senderid}, {
+        $set: {
+          "teamInfo.admin_requests.$.status" : true}
+          
+         
+      });
+    
+
+      
+      console.log("data---->"  , update );
+      responseData = {
+        data: null,
+        status: true,
+        message: "User add to your Team",
+      };
+    }else {
+      const update = await User.findOneAndUpdate({ "_id" : req.params.id ,"teamInfo.admin_requests.senderid": req.body.senderid}, {
+        $pull: {
+          "teamInfo.admin_requests" : {
+          "senderid": req.body.senderid,
+        }},
+      });
+
+      responseData = {
+        data: null,
+        status: false,
+        message: "User remove from your team  request ",
+      };
+    }
   } catch (e) {
     // console.log("");
     responseData = {

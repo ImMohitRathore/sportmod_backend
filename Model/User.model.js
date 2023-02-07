@@ -60,9 +60,11 @@ const UserSchema = new mongoose.Schema({
   teamInfo:{
     admin_requests :[
       {
-     senderid:{} , 
-     username : {} , 
+      senderid:{} , 
+      teamid : {},
      profile : {},
+     username : {} , 
+     team_ucode:{},
      status : {
       type : Boolean
      }

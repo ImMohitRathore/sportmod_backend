@@ -28,7 +28,11 @@ const TeamSchema = new mongoose.Schema({
    },
 
   NumderOfPlayers:{
-    type:String
+    type:Number
+  } ,
+
+  Expected_NumderOfPlayers:{
+    type:Number
   } ,
   groundType:{
     type:String //comes from ground modal================//

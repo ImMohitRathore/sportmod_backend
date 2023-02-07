@@ -4,7 +4,7 @@ const teamcontroller = require('../controller/team.controller')
 
 
 
-Router.post("/createTeam" ,teamcontroller.createTeam)
+Router.post("/createTeam/:adminid" ,teamcontroller.createTeam)
 Router.post("/joinTeam" ,teamcontroller.joinTeam)
 
 

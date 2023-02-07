@@ -7,10 +7,10 @@ exports.createTeam = async (req, res) => {
     teamName,
     teamBio,
     team_ucode,
-    createdBy,
+   
     isPrimary,
     game_type,
-    NumderOfPlayers,
+    Expected_NumderOfPlayers,
     groundType,
     team_status,
   } = req.body;
@@ -25,10 +25,10 @@ exports.createTeam = async (req, res) => {
         !teamName||
         !teamBio||
         !team_ucode||
-        !createdBy||
+       
         !isPrimary||
         !game_type||
-        !NumderOfPlayers||
+        !Expected_NumderOfPlayers||
         !groundType||
         !team_status
     ) {

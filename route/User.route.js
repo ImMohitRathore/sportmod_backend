@@ -8,7 +8,8 @@ Router.post('/userLogin' ,controller.userLogin )
 Router.post('/otpverify' , controller.otpverify)
 Router.post('/usernameVerfy' , controller.usernameVerfy)
 Router.patch('/sendFreindRequiest'  , controller.sendFreindRequest)
-Router.patch('/RequestApprove_or_deny'  , controller.RequestApprove_or_deny)
+Router.patch('/RequestApprove_or_deny/:id'  , controller.RequestApprove_or_deny)
+Router.patch('/TeamJoin_RequestApprove_or_deny/:id'  , controller.TeamJoin_RequestApprove_or_deny)
 
 
 
