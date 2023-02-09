@@ -3,8 +3,8 @@ var cloudinary = require("../cloudnary/imageUploader");
 
 exports.create_ground = async (req, res) => {
   const file = req.files.image;
-  // console.log("cccaaajjjj" , file);
-  // cloudinary.uploader
+  console.log("cccaaajjjj", file);
+  cloudinary.uploader;
 
   const { groundName, size, cost, timingEnd, groundImage } = req.body;
   let reData = {};
@@ -64,7 +64,7 @@ exports.create_ground = async (req, res) => {
         }
       }
     }
-    // console.log("reData-->"  , reData);
+    console.log("reData-->", reData);
     // res.json(reData)
     return reData;
   } catch (e) {

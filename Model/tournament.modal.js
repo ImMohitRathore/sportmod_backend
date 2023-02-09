@@ -10,12 +10,9 @@ const TournamentSchema = new mongoose.Schema({
   subtitle: {
     type: String,
   },
-  coverImage: {
-    type: String,
-  },
-  multiImages: {
-    type: Object, //this for letter for multi plae images
-  },
+  // coverImage: {
+  //   type: String,
+  // },
 
   descrption: {
     type: String,

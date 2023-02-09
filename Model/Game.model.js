@@ -1,24 +1,14 @@
 const mongoose = require("mongoose");
 const GameSchema = new mongoose.Schema({
-  gameName: {
-    type: String,
-  },
+  gameName: String,
 
-  maxTeam: {
-    type: String,
-  },
+  maxTeam: String,
 
-  minTeam: {
-    type: String,
-  },
+  minTeam: String,
 
-  groundType: {
-    type: String,
-  },
+  gameType: String,
 
-  createAt: {
-    type: String,
-  },
+  createAt: String,
 });
 
 module.exports = mongoose.model("Game", GameSchema);
