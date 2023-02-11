@@ -3,6 +3,15 @@ const app = express()
 var bodyParser = require('body-parser')
 require("./connection/DB")
 require('dotenv').config()
+const cors = require("cors");
+const corsOptions ={
+    origin:'*', 
+    credentials:true, //access-control-allow-credentials:true
+     optionSuccessStatus:200,
+}
+
+app.use(cors(corsOptions)) 
+
 var PORT =process.env.PORT  
 const multer  = require('multer');
 const upload = multer();
