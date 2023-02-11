@@ -1,7 +1,7 @@
 const service = require("../Service/game.service");
 
 exports.create_game = async (req, res) => {
-  req.body = JSON.parse(req.body.data);
+  // req.body = JSON.parse(req.body.data);
   // console.log("req" , req.body , req.files) ;
 
   const { gameName, maxTeam, minTeam, gameType, createAt } = req.body;
@@ -15,11 +15,11 @@ exports.create_game = async (req, res) => {
     return res.send(responseData);
   }
   if (
-    !tm_details.gameName ||
-    !tm_details.maxTeam ||
-    !tm_details.minTeam ||
-    !tm_details.gameType ||
-    !tm_details.createAt
+    !gameName ||
+    !maxTeam ||
+    !minTeam ||
+    !gameType ||
+    !createAt
   ) {
     console.log("check", tm_details);
     responseData = {

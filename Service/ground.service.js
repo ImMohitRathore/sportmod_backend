@@ -1,20 +1,19 @@
 var ground = require("../Model/Ground.model");
 var cloudinary = require("../cloudnary/imageUploader");
-
+const uploadFromBuffer = require("../cloudnary/imageUploader")
 exports.create_ground = async (req, res) => {
-  const file = req.files.image;
-  console.log("cccaaajjjj", file);
-  cloudinary.uploader;
 
-  const { groundName, size, cost, timingEnd, groundImage } = req.body;
-  let reData = {};
+  // console.log("cccaaajjjj", file);
+  // cloudinary.uploader;
+
+  const {  groundName,  Size,Cost, TimingEnd } = req.body;
+console.log("daa" ,req.body );
+  let reData = {} ;
   try {
     if (
-      !groundName ||
-      !size ||
-      // !image ||
+      !groundName ||  !Size ||!Cost || !TimingEnd 
 
-      !dataStatus
+   
     ) {
       reData = {
         status: 400,
@@ -22,51 +21,41 @@ exports.create_ground = async (req, res) => {
         message: "please  fill the data properly",
       };
 
-      return reData;
+ 
     } else {
-      let imageStatus = await cloudinary.uploader.upload(
-        file.tempFilePath,
-        { folder: "ground" },
-        async function (err, resu) {}
-      );
 
-      if (imageStatus.url) {
+      let imageurl = await uploadFromBuffer.uploadFromBuffer(req);
+      console.log("dta1111" , imageurl);
+      // return false
+    
+   
+      
         const grounddata = {
           groundName,
-          size,
-          cost,
-          timingEnd,
-          groundImage: imageStatus.url,
+          Size,
+          Cost,
+          TimingEnd,
+          groundImage: imageurl[0].url,
         };
-
+          console.log("data---> " ,grounddata);
         const newdata = new ground(grounddata);
 
         const addedData = await newdata.save();
 
-        if (addedData) {
+      
           reData = {
             status: 201,
             data: addedData,
             message: "ground created",
           };
 
-          console.log(reData);
-          // return   "dsg"
-          return reData;
-        } else {
-          reData = {
-            status: 200,
-            data: null,
-            message: "Unable to add ground!",
-          };
-          // return   "dsg"
-          return reData;
-        }
-      }
+         
+          console.log("reData-->", reData);
+        
+      
     }
-    console.log("reData-->", reData);
     // res.json(reData)
-    return reData;
+  
   } catch (e) {
     console.log("Server request failed please try again letter!!", e);
   }

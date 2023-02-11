@@ -21,6 +21,9 @@ app.use(require('./route/club.route'))
 app.use(require('./route/tournament.route'))
 app.use(require('./route/team.route'))
 // console.log("port" , PORT); 
+app.use(require('./route/game.route'))
+
+app.use(require('./route/ground.route'))
 
 app.listen(PORT, ()=>{
 console.log(`backend runnig on ${PORT} `);
