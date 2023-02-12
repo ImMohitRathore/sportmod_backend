@@ -2,8 +2,9 @@ const service = require("../Service/ground.service");
 
 exports.create_ground = async function (req, res) {
   try {
-    // console.log(JSON.parse(req.body.data));
-    req.body =JSON.parse(req.body.data)
+    // console.log(req.files  ,req.body);
+    // return false 
+      req.body = JSON.parse(req.body.data);
     var resData = await service.create_ground(req, res);
     console.log("resData", resData);
     return res.status(200).json({

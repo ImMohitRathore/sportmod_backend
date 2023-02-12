@@ -65,3 +65,11 @@ console.log("daa" ,req.body );
   // return   reData
   // return reData
 };
+
+
+
+exports.get_Ground = async (req, res) => {
+  filterdata= await  ground.find({})
+
+  res.send(filterdata)
+};
