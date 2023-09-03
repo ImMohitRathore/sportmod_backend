@@ -2,6 +2,7 @@ const User = require("../Model/User.model");
 const JoinTeam = require("../Model/joinTeam.modal");
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
+const OtpService = require('./Otp.service')
 
 exports.User_data_save_before_verify = async (req) => {
   let responseData = {};
@@ -106,6 +107,47 @@ exports.usernameVerfy = async (username) => {
       message: "username is already exist ",
     };
   }
+  return responseData;
+};
+
+exports.UserDataSave = async (req) => {
+  let responseData = {};
+  console.log("fff" ,req.body);
+
+  try {
+    
+    const response = await User.findOneAndUpdate(
+      { email: req.body.email },
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+
+    if (response) {
+      responseData = {
+        data: response,
+        status: true,
+        message: "data save succesfully ",
+      };
+    } else{
+
+      responseData = {
+        data: null,
+        status: false,
+        message: "something is wrong ",
+      };
+    }
+  } catch (e) {
+    // console.log("");
+    responseData = {
+      data: `something is wrong ${e}`,
+      status: false,
+      message: "username is already exist ",
+    };
+  }
+
+  console.log(responseData);
   return responseData;
 };
 
@@ -342,4 +384,63 @@ exports.TeamJoin_RequestApprove_or_deny = async (req) => {
     };
   }
   return responseData;
+};
+
+
+// Otp Send 
+exports.sendOtp = async function (req, res) {
+  try {
+    let email = req.body.email;
+    // let mobile = req.body.mobile;
+    let otpType = req.body.otpType;
+    const Ndate = new Date();
+    var expData = new Date(Ndate.getTime() + 5 * 60000);
+    let OtpValue = Math.floor(100000 + Math.random() * 900000);
+
+    if (email != "" && email != null) {
+      let obj = {
+        // userMobile: mobile,
+        email: email,
+        otpType: otpType,
+        OtpValue: OtpValue,
+        OtpExp: expData,
+        isExp: false,
+        dataStatus: 1,
+      };
+      const saveOtp = await OtpService.otpSave(obj)
+      console.log("save Otp::" ,saveOtp);
+      // return false
+
+
+
+      if (saveOtp) {
+        let reData = {
+          status: true,
+          data: saveOtp,
+          message: "otp is generated",
+        };
+
+        return reData;
+      } else {
+        let reData = {
+          status: false,
+          data: addedData,
+          message: "failed to create otp",
+        };
+
+        return reData;
+      }
+    } else {
+      console.log("Ndate");
+    }
+  } catch (e) {
+    console.log("catch", e);
+    let reData = {
+      status: 500,
+      data: "",
+      message: "server is not responding",
+    };
+
+    return reData;
+  }
 };

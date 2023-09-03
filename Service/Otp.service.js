@@ -1,24 +1,31 @@
 const Otp = require("../Model/otp.model");
 const User = require("../Model/User.model");
 
-exports.optSend = async (req) => {
+exports.otpSave = async (data) => {
   let responseData = {};
   try {
+    const expirationTime = new Date();
+expirationTime.setMinutes(expirationTime.getMinutes() + 10);
     const otp = new Otp({
-      email: req.data.email,
-      otpvalue: req.otpvalue,
-      Expire: req.Expire,
+      userEmail: data.email,
+      otpType: data.otpType,
+      OtpValue: data.OtpValue,
+      OtpExp: data.expData,
+      isExp: data.isExp,
+      dataStatus: data.dataStatus,
+      ExpireTime : expirationTime
     });
 
-    console.log("otp", otp);
-    const dataSave = await otp.save();
+    // return false
+    const dataSave = await otp.save()
+    console.log("otp", dataSave);
     responseData = {
-      data: req.otpvalue,
+      data: data.OtpValue,
       status: true,
       message: "otp send  sucessfully",
     };
   } catch (e) {
-    // console.log(e);
+    console.log(e);
     responseData = {
       data: `sonmething is wrong!! ${e}`,
       status: false,
@@ -31,29 +38,38 @@ exports.optSend = async (req) => {
 
 exports.otpverifyService = async (req) => {
   let responseData = {};
-  const { email, otpvalue, currentTime } = req;
+  const { email, OtpValue, currentTime } = req;
 
 try{
 
-  const data = await Otp.findOne({ email: email, otpvalue: otpvalue });
-//   console.log("data", data);
-  if (data) {
-    var ExpireDate = new Date(data.Expire);
-    if (ExpireDate > currentTime) {
-      const response = await User.findOneAndUpdate(
-        { email: email },
-        {
-          $set: {
-            isverify: true,
-          },
-        }
-      );
+  const data = await Otp.findOne({ userEmail: req.email, OtpValue: req.otpvalue });
 
-      responseData = {
-        data: null,
-        status: true,
-        message: "Otp Verify Sucessfully",
-      };
+  console.log("data",  data);
+  if (data) {
+    // var ExpireDate = new Date(data.createdAt);
+    console.log("dddd" ,currentTime ,data.createdAt);
+    if (data.ExpireTime > currentTime) {
+      const user = new User({
+        email: req.email,
+        isverify :true
+       
+      });
+      const response = await user.save()
+      if(response){
+        responseData = {
+          data: response,
+          status: true,
+          message: "Otp Verify Sucessfully",
+        };
+      }else {
+        responseData = {
+          data: null,
+          status: false,
+          message: "somthing went wrong",
+        };
+      }
+
+     
     } else {
       responseData = {
         data: null,
@@ -72,6 +88,11 @@ try{
 
 }catch(e){
 console.log("e------>",e);
+responseData = {
+  data: e,
+  status: false,
+  message: "somthing went wrong",
+};
 }
   return responseData
 };

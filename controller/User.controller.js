@@ -1,6 +1,6 @@
 const Service = require("../Service/User.service");
 const OtpService = require("../Service/Otp.service");
-
+const bcrypt = require('bcrypt');
 function AddMinutesToDate(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);
 }
@@ -36,7 +36,7 @@ exports.userLogin = async (req, res) => {
      
       data.Expire = next;
 
-      const otp = await OtpService.optSend(data);
+      const otp = await OtpService.otpSave(data);
       return res.send(otp)
 
     };
@@ -59,8 +59,25 @@ exports.userLogin = async (req, res) => {
   }
 };
 
+
+exports.sendotp = async(req , res)=>{
+  const {  email ,otpType}  =req.body
+  let responseData = {}
+  if (!email || !otpType) {
+    responseData = {
+      data: null,
+      status: false,
+      message: "Please fill the data properly",
+    };
+  
+    return res.send(responseData);
+  }
+  const data = await Service.sendOtp(req)
+  res.send(data)
+  }
 exports.otpverify = async(req , res)=>{
-const {otpvalue , email}  =req.body
+const {otpvalue , email}  =req.body;
+console.log("ffff" ,otpvalue ,email);
 let responseData = {}
 if (!otpvalue || !email) {
   responseData = {
@@ -98,7 +115,21 @@ exports.usernameVerfy = async(req , res)=>{
 const data = await Service.usernameVerfy(req.body.username)
 res.send(data)
 }
+exports.UserDataSave = async (req ,res) => {
+  // Check if a password is provided in the request
+  if (req.body.password) {
+    // Hash the password using bcrypt
+    const saltRounds = 10; // You can adjust the number of salt rounds
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
+    // Replace the plain text password with the hashed password in the request body
+    req.body.password = hashedPassword;
+  }
+
+  // Continue with saving the user data to the database and return the result
+  const data = await Service.UserDataSave(req);
+  res.send(data)
+};
 
 
 // *********************send freind  request ***********************

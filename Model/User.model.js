@@ -9,11 +9,19 @@ const UserSchema = new mongoose.Schema({
     unique: true,
   },
 
+
   profile: {
     type: String,
   },
+  password: {
+    type: String,
+  },
 
-  name: {
+  fname: {
+    type: String,
+  },
+
+  lname: {
     type: String,
   },
 
