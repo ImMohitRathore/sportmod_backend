@@ -23,6 +23,7 @@ exports.create_game = async (req) => {
       maxTeam: req.body.maxTeam,
       minTeam: req.body.minTeam,
       gameType: req.body.gameType,
+      icon: req.body.icon,
       createAt: Date.now(),
     });
 
@@ -45,9 +46,8 @@ exports.create_game = async (req) => {
   return responseData;
 };
 
-
 exports.get_game = async (req, res) => {
-  filterdata= await  Game.find({})
+  filterdata = await Game.find({});
 
-  res.send(filterdata)
+  res.send(filterdata);
 };

@@ -7,6 +7,7 @@ const GameSchema = new mongoose.Schema({
   minTeam: String,
 
   gameType: String,
+  icon: String,
 
   createAt: String,
 });
