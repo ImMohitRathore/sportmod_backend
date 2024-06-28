@@ -1,8 +1,11 @@
 const User = require("../Model/User.model");
 const JoinTeam = require("../Model/joinTeam.modal");
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
-const OtpService = require('./Otp.service')
+const OtpService = require("./Otp.service");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const SECRET_KEY = process.env.SECRET_KEY;
 
 exports.User_data_save_before_verify = async (req) => {
   let responseData = {};
@@ -112,10 +115,8 @@ exports.usernameVerfy = async (username) => {
 
 exports.UserDataSave = async (req) => {
   let responseData = {};
-  console.log("fff" ,req.body);
 
   try {
-    
     const response = await User.findOneAndUpdate(
       { email: req.body.email },
       {
@@ -130,8 +131,7 @@ exports.UserDataSave = async (req) => {
         status: true,
         message: "data save succesfully ",
       };
-    } else{
-
+    } else {
       responseData = {
         data: null,
         status: false,
@@ -151,16 +151,73 @@ exports.UserDataSave = async (req) => {
   return responseData;
 };
 
+exports.SaveUserNamenPass = async (req) => {
+  let responseData = {};
+  console.log("Request Body: ", req.body);
+
+  try {
+    let update = { $set: req.body };
+    let token = null;
+
+    if (req?.body?.username) {
+      token = jwt.sign({ id: req.body._id, email: req.body.email }, SECRET_KEY);
+      const tokenObject = { token: token };
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        update = {
+          ...update,
+          $push: { tokens: tokenObject },
+        };
+      } else {
+        update = {
+          ...update,
+          tokens: [tokenObject],
+        };
+      }
+    }
+
+    // Find the user and update their tokens array
+    const response = await User.findOneAndUpdate(
+      { email: req.body.email },
+      update,
+      { new: true, upsert: true } // Ensure a new document is created if one doesn't exist
+    );
+
+    if (response) {
+      responseData = {
+        data: response,
+        token: token, // Include the JWT token in the response if it was generated
+        status: true,
+        message: "Data saved successfully",
+      };
+    } else {
+      responseData = {
+        data: null,
+        status: false,
+        message: "Something went wrong",
+      };
+    }
+  } catch (e) {
+    responseData = {
+      data: `Something went wrong: ${e}`,
+      status: false,
+      message: "Error saving user data and token",
+    };
+  }
+
+  console.log(responseData);
+  return responseData;
+};
+
 exports.sendFreindRequest = async (req) => {
   let responseData = {};
   let requestSendAlready = false;
 
   try {
     const data = await User.findOne({ _id: req.body.userid });
-    console.log("rew" , data.statstics.freindList);
-// return false
+    console.log("rew", data.statstics.freindList);
+    // return false
     // const data =
-   
 
     data.statstics.freindList.forEach((ele) => {
       if (ele.senderid == req.body.senderid) {
@@ -178,12 +235,13 @@ exports.sendFreindRequest = async (req) => {
     if (!requestSendAlready) {
       const update = await User.findByIdAndUpdate(req.body.userid, {
         $push: {
-          "statstics.freindList" : {
-          "senderid": req.body.senderid,
-          "name": req.body.name,
-          "profile": req.body.profile,
-          "status": false,
-        }},
+          "statstics.freindList": {
+            senderid: req.body.senderid,
+            name: req.body.name,
+            profile: req.body.profile,
+            status: false,
+          },
+        },
       });
 
       responseData = {
@@ -203,37 +261,45 @@ exports.sendFreindRequest = async (req) => {
   return responseData;
 };
 
-
-
-
 // *********************approve or deny....................
 exports.RequestApprove_or_deny = async (req) => {
   let responseData = {};
 
-  console.log("datttttt" , req.params.id);
+  console.log("datttttt", req.params.id);
 
   try {
+    if (req.body.status == true) {
+      const update = await User.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          "statstics.freindList.senderid": req.body.senderid,
+        },
+        {
+          $set: {
+            "statstics.freindList.$.status": true,
+          },
+        }
+      );
 
-
- 
-    if (req.body.status==true) {
-      const update = await User.findOneAndUpdate({ "_id" : req.params.id ,"statstics.freindList.senderid": req.body.senderid}, {
-        $set: {
-          "statstics.freindList.$.status" : true},
-      });
-       
       responseData = {
         data: null,
         status: true,
         message: "User add to your freind list",
       };
-    }else {
-      const update = await User.findOneAndUpdate({ "_id" : req.params.id, "statstics.freindList.senderid": req.body.senderid}, {
-        $pull: {
-          "statstics.freindList" : {
-          "senderid": req.body.senderid,
-        }},
-      });
+    } else {
+      const update = await User.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          "statstics.freindList.senderid": req.body.senderid,
+        },
+        {
+          $pull: {
+            "statstics.freindList": {
+              senderid: req.body.senderid,
+            },
+          },
+        }
+      );
 
       responseData = {
         data: null,
@@ -252,74 +318,66 @@ exports.RequestApprove_or_deny = async (req) => {
   return responseData;
 };
 
-
-
-
 // Team Join Admin Request ----------------
 
-
-exports.Team_join_request = async (adminid , teamid , team_ucode,req) => {
-
+exports.Team_join_request = async (adminid, teamid, team_ucode, req) => {
   let responseData = {};
 
-console.log(req.body);
+  console.log(req.body);
   try {
-
     const query = [
       {
-        $unwind:"$teamInfo"
-     },
-     {
-        $unwind:"$teamInfo.admin_requests"
-     },
-     
-     
-     {
-         
-         $match:{
-             "teamInfo.admin_requests.senderid" : req.body.player_id,
-             "teamInfo.admin_requests.teamid" :  typeof(req.body.team_id) =='object'?  req.body.team_id :ObjectId(req.body.team_id)
-             }
-         }
-    ]
+        $unwind: "$teamInfo",
+      },
+      {
+        $unwind: "$teamInfo.admin_requests",
+      },
+
+      {
+        $match: {
+          "teamInfo.admin_requests.senderid": req.body.player_id,
+          "teamInfo.admin_requests.teamid":
+            typeof req.body.team_id == "object"
+              ? req.body.team_id
+              : ObjectId(req.body.team_id),
+        },
+      },
+    ];
     // const  res= ObjectId(req.body.teamid)
     // console.log("data--->" ,query , typeof(req.body.team_id)  ,typeof(res));
     // return false
 
-    const data = await User.aggregate(query) 
+    const data = await User.aggregate(query);
 
-
-    
-    // return 
+    // return
 
     // console.log("valllllllllllllllllllll" , adminid);
-    if(data.length==0){
-    const update = await User.findOneAndUpdate(adminid, {
-      $push: {
-        "teamInfo.admin_requests" : {
-        "senderid": req.body.player_id,
-        "username": req.body.username,
-        "profile": req.body.profile,
-        "team_ucode": team_ucode,
-        "teamid": teamid,
-        "status": false,
-      }},
-    });
+    if (data.length == 0) {
+      const update = await User.findOneAndUpdate(adminid, {
+        $push: {
+          "teamInfo.admin_requests": {
+            senderid: req.body.player_id,
+            username: req.body.username,
+            profile: req.body.profile,
+            team_ucode: team_ucode,
+            teamid: teamid,
+            status: false,
+          },
+        },
+      });
 
-    responseData = {
-      data: update,
-      status: true,
-      message: " team join request send successfully ",
-    };
-  
-  }else{
-    responseData = {
-      data: null,
-      status: false,
-      message: " team join request already  sended  ",
-    };
-  }
-   
+      responseData = {
+        data: update,
+        status: true,
+        message: " team join request send successfully ",
+      };
+    } else {
+      responseData = {
+        data: null,
+        status: false,
+        message: " team join request already  sended  ",
+      };
+    }
   } catch (e) {
     // console.log("");
     responseData = {
@@ -331,43 +389,44 @@ console.log(req.body);
   return responseData;
 };
 
-
-
-
-
-
 // *********************approve or deny....................
 exports.TeamJoin_RequestApprove_or_deny = async (req) => {
   let responseData = {};
 
-
   try {
+    if (req.body.status == true) {
+      const update = await User.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          "teamInfo.admin_requests.senderid": req.body.senderid,
+        },
+        {
+          $set: {
+            "teamInfo.admin_requests.$.status": true,
+          },
+        }
+      );
 
-
- 
-    if (req.body.status==true) {
-      const update = await User.findOneAndUpdate({  "_id" : req.params.id ,"teamInfo.admin_requests.senderid": req.body.senderid}, {
-        $set: {
-          "teamInfo.admin_requests.$.status" : true}
-          
-         
-      });
-    
-
-      
-      console.log("data---->"  , update );
+      console.log("data---->", update);
       responseData = {
         data: null,
         status: true,
         message: "User add to your Team",
       };
-    }else {
-      const update = await User.findOneAndUpdate({ "_id" : req.params.id ,"teamInfo.admin_requests.senderid": req.body.senderid}, {
-        $pull: {
-          "teamInfo.admin_requests" : {
-          "senderid": req.body.senderid,
-        }},
-      });
+    } else {
+      const update = await User.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          "teamInfo.admin_requests.senderid": req.body.senderid,
+        },
+        {
+          $pull: {
+            "teamInfo.admin_requests": {
+              senderid: req.body.senderid,
+            },
+          },
+        }
+      );
 
       responseData = {
         data: null,
@@ -386,8 +445,7 @@ exports.TeamJoin_RequestApprove_or_deny = async (req) => {
   return responseData;
 };
 
-
-// Otp Send 
+// Otp Send
 exports.sendOtp = async function (req, res) {
   try {
     let email = req.body.email;
@@ -407,11 +465,9 @@ exports.sendOtp = async function (req, res) {
         isExp: false,
         dataStatus: 1,
       };
-      const saveOtp = await OtpService.otpSave(obj)
-      console.log("save Otp::" ,saveOtp);
+      const saveOtp = await OtpService.otpSave(obj);
+      console.log("save Otp::", saveOtp);
       // return false
-
-
 
       if (saveOtp) {
         let reData = {

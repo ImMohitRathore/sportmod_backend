@@ -1,44 +1,36 @@
 const mongoose = require("mongoose");
+
 const UserSchema = new mongoose.Schema({
   username: {
     type: String,
   },
-
   email: {
     type: String,
     unique: true,
   },
-
-
   profile: {
     type: String,
   },
   password: {
     type: String,
   },
-
   fname: {
     type: String,
   },
-
   lname: {
     type: String,
   },
-
   phone: {
     type: Number,
   },
-
   DOB: {
     type: String,
   },
-
   isverify: {
     type: String,
   },
-
   isOrganizer: {
-    type: Boolean, //true - false only
+    type: Boolean, // true - false only
   },
   statstics: {
     freindList: [
@@ -67,7 +59,6 @@ const UserSchema = new mongoose.Schema({
       type: String,
     },
   },
-
   teamInfo: {
     admin_requests: [
       {
@@ -84,23 +75,21 @@ const UserSchema = new mongoose.Schema({
   },
   userAbout: {
     favGame: {
-      type: String, //will come from game list==========//
+      type: String, // will come from game list
     },
     user_bio: {
-      type: String, // user bio===============//
+      type: String, // user bio
     },
     team_id: {
-      type: String, //this for personal team comes from team modal
+      type: String, // this for personal team comes from team modal
     },
     club_id: {
-      type: String, //if the user is organiser=========//
+      type: String, // if the user is organiser
     },
   },
-
   userWallet: {
     type: String,
   },
-
   userBank: {
     ifscCode: {
       type: String,
@@ -118,9 +107,12 @@ const UserSchema = new mongoose.Schema({
   createAt: {
     type: String,
   },
-
   updatedAt: {
     type: String,
+  },
+  tokens: {
+    type: [{ token: String }],
+    default: [], // Initialize as an empty array
   },
 });
 
