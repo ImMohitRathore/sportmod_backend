@@ -8,48 +8,19 @@ function AddMinutesToDate(date, minutes) {
 exports.userLogin = async (req, res) => {
   const { email, password } = req.body;
   let responseData = {};
-  if (isverify == false) {
-    if (!name || !email) {
-      responseData = {
-        data: null,
-        status: false,
-        message: "Please fill the data properly",
-      };
 
-      return res.send(responseData);
-    }
-    const data = await Service.User_data_save_before_verify(req.body);
-    console.log(data);
-    if (data.status) {
-      var now = new Date();
-      var next = AddMinutesToDate(now, 5);
+  if (!password || !email) {
+    responseData = {
+      data: null,
+      status: false,
+      message: "Please fill the data properly",
+    };
 
-      // console.log(next);
-
-      //   return
-      data.otpvalue = Math.floor(100000 + Math.random() * 900000);
-
-      data.Expire = next;
-
-      const otp = await OtpService.otpSave(data);
-      return res.send(otp);
-    }
-
-    return res.send(data);
-  } else {
-    if (!password || !email || !username || !DOB) {
-      responseData = {
-        data: null,
-        status: false,
-        message: "Please fill the data properly",
-      };
-
-      return res.send(responseData);
-    }
-    const data = await Service.User_full_dataSave(req.body);
-    console.log("data", data);
-    return res.send(data);
+    return res.send(responseData);
   }
+  const data = await Service.User_full_dataSave(req);
+  console.log("data", data);
+  return res.send(data);
 };
 
 exports.sendotp = async (req, res) => {
@@ -138,6 +109,20 @@ exports.sendFreindRequest = async (req, res) => {
   res.send(data);
 };
 
+exports.followUser = async (req, res) => {
+  const { userid, senderid, type } = req.body;
+  if (!userid || !senderid) {
+    responseData = {
+      data: null,
+      status: false,
+      message: "please fill data properly!!",
+    };
+
+    return res.send(responseData);
+  }
+  const data = await Service.followUser(req);
+  res.send(data);
+};
 // ***************request approve or deny
 
 exports.RequestApprove_or_deny = async (req, res) => {

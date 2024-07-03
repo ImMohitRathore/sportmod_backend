@@ -1,7 +1,7 @@
 var cloudinary = require("../cloudnary/cloudnary");
 var streamifier = require("streamifier");
 exports.uploadFromBuffer = async (req) => {
-  console.log("data", req.files);
+  // console.log("data", req.files);
   var alldata = req.files;
   const finatdata = [];
   const data1 = alldata.map(async (ele) => {

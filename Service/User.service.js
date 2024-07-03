@@ -2,8 +2,10 @@ const User = require("../Model/User.model");
 const JoinTeam = require("../Model/joinTeam.modal");
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
+const bcrypt = require("bcrypt");
 const OtpService = require("./Otp.service");
 const jwt = require("jsonwebtoken");
+const { paginate } = require("../helper");
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -44,39 +46,45 @@ exports.User_data_save_before_verify = async (req) => {
   return responseData;
 };
 
-exports.User_full_dataSave = async (data) => {
+exports.User_full_dataSave = async (req) => {
   let responseData = {};
   // return "sf"
   // console.log("Fz");
-  const { email, username, password, DOB } = data;
+  const { email, password } = req.body;
   try {
-    const dataSave = await User.findOne({ email: email, isverify: true });
-    // console.log("data" , dataSave);
-    if (dataSave != null) {
-      await User.findOneAndUpdate(
-        { email: email },
-        {
-          $set: {
-            password: password,
-            username: username,
-            DOB: DOB,
-            profile: "../src/assets/profile.jpg",
-            isOrganizer: false,
-          },
-        }
+    const dataSave = await User.findOne({ email: email });
+    if (dataSave) {
+      const validPassword = await bcrypt.compareSync(
+        password,
+        dataSave.password
       );
+      console.log(validPassword);
 
+      if (!validPassword) {
+        responseData = {
+          data: null,
+          status: false,
+          message: " invalid password",
+        };
+      } else {
+        delete req.body.password;
+        return this.SaveUserNamenPass(req);
+        // token = jwt.sign({ id: dataSave._id, email: email }, SECRET_KEY);
+        // const tokenObject = { token: token };
+        // res.cookie("tk", token, {
+        //   httpOnly: true,
+        // });
+        // return res.status(200).json("login");
+      }
+    } else {
       responseData = {
         data: null,
         status: false,
-        message: "User account Created sucessfully ",
+        message: " invalid credintial",
       };
-    } else
-      responseData = {
-        data: null,
-        status: false,
-        message: "Email is not find ",
-      };
+      // console.log("invalid email", data);
+      // return req.status(401).json("user eror id");
+    }
   } catch (e) {
     console.log(e);
   }
@@ -159,7 +167,7 @@ exports.SaveUserNamenPass = async (req) => {
     let update = { $set: req.body };
     let token = null;
 
-    if (req?.body?.username) {
+    if (req?.body?.username || req?.body?.email) {
       token = jwt.sign({ id: req.body._id, email: req.body.email }, SECRET_KEY);
       const tokenObject = { token: token };
       const user = await User.findOne({ email: req.body.email });
@@ -176,17 +184,16 @@ exports.SaveUserNamenPass = async (req) => {
       }
     }
 
-    // Find the user and update their tokens array
     const response = await User.findOneAndUpdate(
       { email: req.body.email },
       update,
-      { new: true, upsert: true } // Ensure a new document is created if one doesn't exist
+      { new: true, upsert: true }
     );
 
     if (response) {
       responseData = {
         data: response,
-        token: token, // Include the JWT token in the response if it was generated
+        token: token,
         status: true,
         message: "Data saved successfully",
       };
@@ -260,6 +267,58 @@ exports.sendFreindRequest = async (req) => {
   }
   return responseData;
 };
+
+// exports.followUser = async (req) => {
+//   let responseData = {};
+//   let requestSendAlready = false;
+
+//   try {
+//     const data = await User.findOne({ _id: req.body.userid });
+//     console.log("rew", data.statstics.freindList);
+//     // return false
+//     // const data =
+
+//     data.statstics.followersList.forEach((ele) => {
+//       if (ele =  req.body.senderid) {
+
+//         responseData = {
+//           data: null,
+//           status: false,
+//           message: "freind request already sended ",
+//         };
+
+//         requestSendAlready = true;
+//       }
+//     });
+
+//     if (!requestSendAlready) {
+//       const update = await User.findByIdAndUpdate(req.body.userid, {
+//         $push: {
+//           "statstics.freindList": {
+//             senderid: req.body.senderid,
+//             name: req.body.name,
+//             profile: req.body.profile,
+//             status: false,
+//           },
+//         },
+//       });
+
+//       responseData = {
+//         data: update,
+//         status: false,
+//         message: "freind request send successfully ",
+//       };
+//     }
+//   } catch (e) {
+//     // console.log("");
+//     responseData = {
+//       data: `something is wrong ${e}`,
+//       status: false,
+//       message: "freind request not  send successfully ",
+//     };
+//   }
+//   return responseData;
+// };
 
 // *********************approve or deny....................
 exports.RequestApprove_or_deny = async (req) => {
@@ -498,5 +557,44 @@ exports.sendOtp = async function (req, res) {
     };
 
     return reData;
+  }
+};
+
+exports.profileData = async function (req, res) {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).select("-password -tokens"); // Exclude sensitive fields
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      status: true,
+      data: user,
+      message: "User profile data retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error retrieving user profile data:", error);
+    res.status(500).json({
+      status: false,
+      message: "Error retrieving user profile data",
+    });
+  }
+};
+
+exports.getUsers = async (req, res) => {
+  const { page, limit } = req.body;
+
+  try {
+    const paginatedUsers = await paginate(User, {}, { page, limit });
+
+    res.status(200).json(paginatedUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

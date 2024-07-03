@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const mongoosePaginate = require("mongoose-paginate-v2");
 const UserSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -32,6 +32,11 @@ const UserSchema = new mongoose.Schema({
   isOrganizer: {
     type: Boolean, // true - false only
   },
+
+  location: {
+    latitude: Number,
+    longitude: Number,
+  },
   statstics: {
     freindList: [
       {
@@ -43,6 +48,8 @@ const UserSchema = new mongoose.Schema({
         },
       },
     ],
+
+    followersList: [],
     followers: {
       type: Number,
     },
@@ -115,5 +122,5 @@ const UserSchema = new mongoose.Schema({
     default: [], // Initialize as an empty array
   },
 });
-
+UserSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model("User", UserSchema);

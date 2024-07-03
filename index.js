@@ -12,7 +12,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-var PORT = process.env.PORT;
+// var PORT = process.env.PORT;
+var PORT = 4000;
 const multer = require("multer");
 const upload = multer();
 app.use(upload.any());
@@ -33,7 +34,6 @@ app.use(require("./route/team.route"));
 app.use(require("./route/game.route"));
 
 app.use(require("./route/ground.route"));
-
 app.listen(PORT, () => {
   console.log(`backend runnig on ${PORT} `);
 });
