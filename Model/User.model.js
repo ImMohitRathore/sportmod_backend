@@ -49,11 +49,10 @@ const UserSchema = new mongoose.Schema({
       },
     ],
 
-    followersList: [],
-    followers: {
+    followerCount: {
       type: Number,
     },
-    following: {
+    followingCount: {
       type: Number,
     },
     tournaments: {

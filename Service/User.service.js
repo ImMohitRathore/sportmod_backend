@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const OtpService = require("./Otp.service");
 const jwt = require("jsonwebtoken");
 const { paginate } = require("../helper");
+const follwersModel = require("../Model/follwers.model");
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -268,57 +269,75 @@ exports.sendFreindRequest = async (req) => {
   return responseData;
 };
 
-// exports.followUser = async (req) => {
-//   let responseData = {};
-//   let requestSendAlready = false;
+exports.followUser = async (req) => {
+  let responseData = {};
+  const userIds = req.body.userid; // Array of user IDs
+  const senderId = req.body.senderid;
 
-//   try {
-//     const data = await User.findOne({ _id: req.body.userid });
-//     console.log("rew", data.statstics.freindList);
-//     // return false
-//     // const data =
+  try {
+    for (const userId of userIds) {
+      const existingFollower = await follwersModel.findOne({
+        fromUser: senderId,
+        toUser: userId,
+      });
 
-//     data.statstics.followersList.forEach((ele) => {
-//       if (ele =  req.body.senderid) {
+      if (existingFollower) {
+        await follwersModel.deleteOne({ fromUser: senderId, toUser: userId });
 
-//         responseData = {
-//           data: null,
-//           status: false,
-//           message: "freind request already sended ",
-//         };
+        await Promise.all([
+          User.findByIdAndUpdate(
+            senderId,
+            { $inc: { "statstics.followingCount": -1 } },
+            { new: true }
+          ),
+          User.findByIdAndUpdate(
+            userId,
+            { $inc: { "statstics.followerCount": -1 } },
+            { new: true }
+          ),
+        ]);
 
-//         requestSendAlready = true;
-//       }
-//     });
+        responseData[userId] = {
+          status: true,
+          message: `Unfollowed user ${userId} successfully`,
+        };
+      } else {
+        await new follwersModel({
+          fromUser: senderId,
+          toUser: userId,
+          createAt: new Date().toISOString(),
+        }).save();
 
-//     if (!requestSendAlready) {
-//       const update = await User.findByIdAndUpdate(req.body.userid, {
-//         $push: {
-//           "statstics.freindList": {
-//             senderid: req.body.senderid,
-//             name: req.body.name,
-//             profile: req.body.profile,
-//             status: false,
-//           },
-//         },
-//       });
+        await Promise.all([
+          User.findByIdAndUpdate(
+            senderId,
+            { $inc: { "statstics.followingCount": 1 } },
+            { new: true }
+          ),
+          User.findByIdAndUpdate(
+            userId,
+            { $inc: { "statstics.followerCount": 1 } },
+            { new: true }
+          ),
+        ]);
 
-//       responseData = {
-//         data: update,
-//         status: false,
-//         message: "freind request send successfully ",
-//       };
-//     }
-//   } catch (e) {
-//     // console.log("");
-//     responseData = {
-//       data: `something is wrong ${e}`,
-//       status: false,
-//       message: "freind request not  send successfully ",
-//     };
-//   }
-//   return responseData;
-// };
+        responseData[userId] = {
+          status: true,
+          message: `Followed user ${userId} successfully`,
+        };
+      }
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error("Error updating followers list:", error);
+    return {
+      data: null,
+      status: false,
+      message: `Server error: ${error}`,
+    };
+  }
+};
 
 // *********************approve or deny....................
 exports.RequestApprove_or_deny = async (req) => {
