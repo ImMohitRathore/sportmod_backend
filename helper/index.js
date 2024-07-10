@@ -3,9 +3,10 @@ const mongoose = require("mongoose");
 const { model } = mongoose;
 const mongoosePaginate = require("mongoose-paginate-v2");
 
-const paginate = async (model, conditions = {}, options = {}) => {
+const paginate = async (model, pipeline = null, options = {}) => {
   const page = options.page || 1;
   const limit = options.limit || 20;
+  const skip = (page - 1) * limit;
 
   const paginatedResults = {
     currentPage: page,
@@ -13,21 +14,40 @@ const paginate = async (model, conditions = {}, options = {}) => {
   };
 
   try {
-    const result = await model.paginate(conditions, {
-      page,
-      limit,
-      sort: options.sort || {},
-      select: options.select || "",
-    });
+    let result, totalDocs;
 
-    paginatedResults.totalPages = result.totalPages;
-    paginatedResults.totalCount = result.totalDocs;
-    paginatedResults.data = result.docs;
+    if (pipeline) {
+      // Append pagination stages to the pipeline
+      const paginationPipeline = [
+        ...pipeline,
+        { $skip: skip },
+        { $limit: limit },
+      ];
+
+      result = await model.aggregate(paginationPipeline);
+      totalDocs = await model.countDocuments(pipeline[0]?.$match || {});
+    } else {
+      // Default pagination
+      result = await model
+        .find({})
+        .skip(skip)
+        .limit(limit)
+        .sort(options.sort || {})
+        .select(options.select || "");
+
+      totalDocs = await model.countDocuments({});
+    }
+
+    const totalPages = Math.ceil(totalDocs / limit);
+
+    paginatedResults.totalPages = totalPages;
+    paginatedResults.totalCount = totalDocs;
+    paginatedResults.data = result;
 
     let obj = {
       status: true,
       data: paginatedResults,
-      message: "data fetch successfully",
+      message: "Data fetched successfully",
     };
     return obj;
   } catch (error) {

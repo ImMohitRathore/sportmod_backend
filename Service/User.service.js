@@ -297,8 +297,9 @@ exports.followUser = async (req) => {
           ),
         ]);
 
-        responseData[userId] = {
+        responseData = {
           status: true,
+          data: [],
           message: `Unfollowed user ${userId} successfully`,
         };
       } else {
@@ -609,8 +610,48 @@ exports.profileData = async function (req, res) {
 exports.getUsers = async (req, res) => {
   const { page, limit } = req.body;
 
+  const userId = req.user?._id;
+  console.log("userDi", userId);
+
+  const pipeline = [
+    {
+      $match: {
+        _id: { $ne: userId },
+      },
+    },
+    {
+      $addFields: {
+        _idString: { $toString: "$_id" },
+      },
+    },
+    {
+      $lookup: {
+        from: "followers",
+        let: { toUserId: "$_idString", fromUserId: { $toString: userId } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$toUser", "$$toUserId"] },
+                  { $eq: ["$fromUser", "$$fromUserId"] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "followStatus",
+      },
+    },
+    {
+      $addFields: {
+        isFollowing: { $gt: [{ $size: "$followStatus" }, 0] },
+      },
+    },
+  ];
+
   try {
-    const paginatedUsers = await paginate(User, {}, { page, limit });
+    const paginatedUsers = await paginate(User, pipeline, { page, limit });
 
     res.status(200).json(paginatedUsers);
   } catch (error) {
