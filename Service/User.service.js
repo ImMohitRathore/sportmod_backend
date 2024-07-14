@@ -299,7 +299,7 @@ exports.followUser = async (req) => {
 
         responseData = {
           status: true,
-          data: [],
+          data: { _id: userId, isFollowing: false },
           message: `Unfollowed user ${userId} successfully`,
         };
       } else {
@@ -322,7 +322,12 @@ exports.followUser = async (req) => {
           ),
         ]);
 
-        responseData[userId] = {
+        responseData = {
+          data: {
+            _id: userId,
+            isFollowing: true,
+          },
+
           status: true,
           message: `Followed user ${userId} successfully`,
         };
