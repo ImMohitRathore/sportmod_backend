@@ -5,7 +5,7 @@ const mongoosePaginate = require("mongoose-paginate-v2");
 
 const paginate = async (model, pipeline = null, options = {}) => {
   const page = options.page || 1;
-  const limit = options.limit || 20;
+  const limit = options.limit || 10;
   const skip = (page - 1) * limit;
 
   const paginatedResults = {
