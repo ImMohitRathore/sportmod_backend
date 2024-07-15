@@ -5,7 +5,7 @@ const UserService = require("./User.service");
 
 exports.createTeam = async (req) => {
   let responseData = {};
-
+  const userId = req.user?._id;
   try {
     const isNotUnique = await Team.find({ team_ucode: req.body.team_ucode });
     //  console.log(isNotUnique);
@@ -17,21 +17,19 @@ exports.createTeam = async (req) => {
       };
     }
 
-    let imageurl = await uploadFromBuffer.uploadFromBuffer(req);
-    console.log("data", imageurl);
+    // let imageurl = await uploadFromBuffer.uploadFromBuffer(req);
+
     const team = new Team({
       teamName: req.body.teamName,
       teamBio: req.body.teamBio,
-      teamLogo: imageurl[0].url,
+      teamLogo: req.body.teamLogo,
       team_ucode: req.body.team_ucode,
-      createdBy: req.params.adminid,
+      selectedPlayers: req.body.selectedPlayers,
       isPrimary: req.body.isPrimary,
-      game_type: req.body.game_type,
-      NumderOfPlayers: 1,
-      Expected_NumderOfPlayers: req.body.Expected_NumderOfPlayers,
-      groundType: req.body.groundType,
+      selectedGame: req.body.selectedGame,
       team_status: req.body.team_status,
       createAt: Date.now(),
+      createdBy: userId,
     });
 
     await team
@@ -68,8 +66,8 @@ exports.joinTeam = async (req) => {
 
   try {
     const admindata = await Team.findOne({ _id: req.body.team_id });
-    console.log("data" , admindata);
-    
+    console.log("data", admindata);
+
     // if (admindata.NumderOfPlayers == admindata.Expected_NumderOfPlayers) {
     //   responseData = {
     //     data: null,
@@ -77,27 +75,27 @@ exports.joinTeam = async (req) => {
     //     message: `Team is full`,
     //   };
     // } else {
-      const adminid = admindata.createdBy;
-      const teamid = admindata._id
-      const data = await UserService.Team_join_request(adminid,  teamid,  admindata.team_ucode,req);
-      console.log("data----------->< " , data);
-      responseData = data;
-      if (data.status == true) {
+    const adminid = admindata.createdBy;
+    const teamid = admindata._id;
+    const data = await UserService.Team_join_request(
+      adminid,
+      teamid,
+      admindata.team_ucode,
+      req
+    );
+    responseData = data;
+    if (data.status == true) {
+      const jointeam = new JoinTeam({
+        team_id: req.body.team_id,
+        player_id: req.body.player_id,
+        status: req.body.status,
+        admin_id: adminid,
+        team_ucode: admindata.team_ucode,
+        createAt: Date.now(),
+      });
 
-        const jointeam = new JoinTeam({
-          team_id: req.body.team_id,
-          player_id: req.body.player_id,
-          status: req.body.status,
-          admin_id : adminid,
-          team_ucode : admindata.team_ucode,
-          createAt: Date.now(),
-        });
-
-        await jointeam.save();
-
-
-       
-      }
+      await jointeam.save();
+    }
     // }
   } catch (e) {
     console.log(e);
@@ -105,4 +103,33 @@ exports.joinTeam = async (req) => {
 
   console.log("resss", responseData);
   return responseData;
+};
+
+exports.getTeamsData = async (req) => {
+  const userId = req.user?._id;
+  const { page = 1, limit = 10 } = req.body;
+  const skip = (page - 1) * limit;
+
+  try {
+    const teams = await Team.find({
+      createdBy: mongoose.Types.ObjectId(userId),
+    })
+      .sort({ reactionCount: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalTeams = await Team.countDocuments({
+      createdBy: mongoose.Types.ObjectId(userId),
+    });
+
+    return {
+      teams,
+      currentPage: page,
+      totalPages: Math.ceil(totalTeams / limit),
+      totalTeams,
+    };
+  } catch (error) {
+    console.error("Error fetching teams data:", error);
+    throw new Error("Failed to fetch teams data");
+  }
 };

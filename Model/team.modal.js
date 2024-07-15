@@ -1,44 +1,33 @@
 const mongoose = require("mongoose");
 const TeamSchema = new mongoose.Schema({
-
-
-  teamName:{
-    type:String
-  }, 
- 
-  teamLogo:{
-    type:String
+  teamName: {
+    type: String,
   },
-  teamBio:{
-    type:String
-   },
-   team_ucode:{
-    type:String,
-    unique:true
-   },
- 
-   createdBy:{
-    type:String
-   },
-   isPrimary:{
-    type:String  //if user want to make it primary team
-   },
-   game_type:{
-    type:String  //from game
-   },
 
-  NumderOfPlayers:{
-    type:Number
-  } ,
-
-  Expected_NumderOfPlayers:{
-    type:Number
-  } ,
-  groundType:{
-    type:String //comes from ground modal================//
+  teamLogo: {
+    type: String,
   },
-  team_status:{
-    type:String // 1=active , 0= soft delete 
+  teamBio: {
+    type: String,
+  },
+  team_ucode: {
+    type: String,
+    unique: true,
+  },
+
+  createdBy: {
+    type: String,
+  },
+  isPrimary: {
+    type: String, //if user want to make it primary team
+  },
+
+  selectedPlayers: [],
+  selectedGame: {
+    type: String, //comes from ground modal================//
+  },
+  team_status: {
+    type: String, // 1=active , 0= soft delete
   },
 
   createAt: {
@@ -47,8 +36,6 @@ const TeamSchema = new mongoose.Schema({
   updatedAt: {
     type: String,
   },
-
-  
 });
 
 module.exports = mongoose.model("Team", TeamSchema);

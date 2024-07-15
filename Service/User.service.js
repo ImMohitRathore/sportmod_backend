@@ -14,7 +14,6 @@ exports.User_data_save_before_verify = async (req) => {
   let responseData = {};
   try {
     const duplicateData = await User.findOne({ email: req.email });
-    console.log("ddd", duplicateData);
     if (duplicateData == null) {
       const user = new User({
         name: req.name,
@@ -98,7 +97,7 @@ exports.usernameVerfy = async (username) => {
 
   try {
     const usernameCheck = await User.findOne({ username: username });
-    console.log(username, usernameCheck);
+
     if (usernameCheck == null) {
       responseData = {
         data: null,
@@ -162,8 +161,6 @@ exports.UserDataSave = async (req) => {
 
 exports.SaveUserNamenPass = async (req) => {
   let responseData = {};
-  console.log("Request Body: ", req.body);
-
   try {
     let update = { $set: req.body };
     let token = null;
@@ -223,13 +220,8 @@ exports.sendFreindRequest = async (req) => {
 
   try {
     const data = await User.findOne({ _id: req.body.userid });
-    console.log("rew", data.statstics.freindList);
-    // return false
-    // const data =
-
     data.statstics.freindList.forEach((ele) => {
       if (ele.senderid == req.body.senderid) {
-        // console.log("ee"  ,ele);
         responseData = {
           data: null,
           status: false,
@@ -271,7 +263,7 @@ exports.sendFreindRequest = async (req) => {
 
 exports.followUser = async (req) => {
   let responseData = {};
-  const userIds = req.body.userid; // Array of user IDs
+  const userIds = req.body.userid;
   const senderId = req.body.senderid;
 
   try {
@@ -348,8 +340,6 @@ exports.followUser = async (req) => {
 // *********************approve or deny....................
 exports.RequestApprove_or_deny = async (req) => {
   let responseData = {};
-
-  console.log("datttttt", req.params.id);
 
   try {
     if (req.body.status == true) {
@@ -549,26 +539,35 @@ exports.sendOtp = async function (req, res) {
         isExp: false,
         dataStatus: 1,
       };
-      const saveOtp = await OtpService.otpSave(obj);
-      console.log("save Otp::", saveOtp);
-      // return false
 
-      if (saveOtp) {
-        let reData = {
-          status: true,
-          data: saveOtp,
-          message: "otp is generated",
-        };
+      const user = await User.findOne({ email });
 
-        return reData;
-      } else {
+      if (user) {
         let reData = {
           status: false,
-          data: addedData,
-          message: "failed to create otp",
+          data: [],
+          message: "An account with this email already exists. Please log in.",
         };
-
         return reData;
+      } else {
+        const saveOtp = await OtpService.otpSave(obj);
+        if (saveOtp) {
+          let reData = {
+            status: true,
+            data: saveOtp,
+            message: "otp is generated",
+          };
+
+          return reData;
+        } else {
+          let reData = {
+            status: false,
+            data: addedData,
+            message: "failed to create otp",
+          };
+
+          return reData;
+        }
       }
     } else {
       console.log("Ndate");
@@ -611,17 +610,26 @@ exports.profileData = async function (req, res) {
     });
   }
 };
-
 exports.getUsers = async (req, res) => {
-  const { page, limit } = req.body;
+  const {
+    page,
+    limit,
+    isShortbyFollowers = false,
+    searchTerm = "",
+  } = req.query;
 
   const userId = req.user?._id;
-  console.log("userDi", userId);
 
   const pipeline = [
     {
       $match: {
         _id: { $ne: userId },
+        $or: [
+          { fname: { $regex: searchTerm, $options: "i" } },
+          { lname: { $regex: searchTerm, $options: "i" } },
+          // Add other fields you want to search by, e.g.:
+          // { username: { $regex: searchTerm, $options: 'i' } },
+        ],
       },
     },
     {
@@ -654,6 +662,14 @@ exports.getUsers = async (req, res) => {
       },
     },
   ];
+
+  if (isShortbyFollowers) {
+    pipeline.push({
+      $sort: {
+        isFollowing: -1,
+      },
+    });
+  }
 
   try {
     const paginatedUsers = await paginate(User, pipeline, { page, limit });
