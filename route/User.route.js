@@ -7,7 +7,7 @@ Router.put("/userLogin", controller.userLogin);
 Router.put("/userDataSave", controller.UserDataSave);
 Router.get("/profile", authenticateJWT, Service.profileData);
 Router.get("/getusers", authenticateJWT, Service.getUsers);
-
+Router.get("/getFollowerList", authenticateJWT, Service.getFollowerList);
 Router.post("/sendOtp", controller.sendotp);
 Router.post("/otpverify", controller.otpverify);
 Router.put("/usernameVerfy", controller.usernameVerfy);

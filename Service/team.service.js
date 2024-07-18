@@ -1,7 +1,9 @@
 const Team = require("../Model/team.modal");
+const Games = require("../Model/Game.model");
 const JoinTeam = require("../Model/joinTeam.modal");
 const uploadFromBuffer = require("../cloudnary/imageUploader");
 const UserService = require("./User.service");
+const mongoose = require("mongoose");
 
 exports.createTeam = async (req) => {
   let responseData = {};
@@ -105,29 +107,59 @@ exports.joinTeam = async (req) => {
   return responseData;
 };
 
-exports.getTeamsData = async (req) => {
-  const userId = req.user?._id;
+exports.getTeamsData = async (req, res) => {
+  const userId = req.user?._id.toString(); // Convert userId to string
   const { page = 1, limit = 10 } = req.body;
   const skip = (page - 1) * limit;
 
   try {
-    const teams = await Team.find({
-      createdBy: mongoose.Types.ObjectId(userId),
-    })
-      .sort({ reactionCount: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const teamsAggregation = await Team.aggregate([
+      {
+        $match: {
+          createdBy: userId, // Ensure the userId is a string for matching
+        },
+      },
+      {
+        $lookup: {
+          from: "games",
+          let: { selectedGame: { $toObjectId: "$selectedGame" } },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$selectedGame"] } } },
+          ],
+          as: "gameDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$gameDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: { reactionCount: -1 },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: parseInt(limit),
+      },
+    ]);
 
     const totalTeams = await Team.countDocuments({
-      createdBy: mongoose.Types.ObjectId(userId),
+      createdBy: userId,
     });
 
-    return {
-      teams,
-      currentPage: page,
-      totalPages: Math.ceil(totalTeams / limit),
-      totalTeams,
+    let final = {
+      data: teamsAggregation,
+      totalPages: page,
+      totalCount: totalTeams,
     };
+    res.status(200).json({
+      status: true,
+      data: final,
+      message: "Data fetched successfully",
+    });
   } catch (error) {
     console.error("Error fetching teams data:", error);
     throw new Error("Failed to fetch teams data");

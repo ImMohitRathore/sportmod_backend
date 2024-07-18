@@ -1,7 +1,6 @@
 const teamservice = require("../Service/team.service");
 
 exports.createTeam = async (req, res) => {
-  console.log("ddd", req.body);
   const { teamName, teamBio, isPrimary, team_status } = req.body;
 
   try {

@@ -679,3 +679,101 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getFollowerList = async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    type = "following", // Type can be "followers" or "following"
+  } = req.query;
+
+  const userId = req.user?._id;
+  console.log("reqqq", userId);
+
+  try {
+    const pipeline = [];
+
+    if (type === "followers") {
+      // Get the list of users who follow the current user
+      pipeline.push(
+        {
+          $match: { toUser: userId.toString() },
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: [{ $strLenCP: "$fromUser" }, 24],
+            },
+          },
+        },
+        {
+          $addFields: {
+            fromUserObjectId: { $toObjectId: "$fromUser" },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "fromUserObjectId",
+            foreignField: "_id",
+            as: "followerUser",
+          },
+        },
+        {
+          $unwind: "$followerUser",
+        },
+        {
+          $replaceRoot: { newRoot: "$followerUser" },
+        }
+      );
+    } else if (type === "following") {
+      // Get the list of users the current user is following
+      pipeline.push(
+        {
+          $match: { fromUser: userId.toString() },
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: [{ $strLenCP: "$toUser" }, 24],
+            },
+          },
+        },
+        {
+          $addFields: {
+            toUserObjectId: { $toObjectId: "$toUser" },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "toUserObjectId",
+            foreignField: "_id",
+            as: "followingUser",
+          },
+        },
+        {
+          $unwind: "$followingUser",
+        },
+        {
+          $replaceRoot: { newRoot: "$followingUser" },
+        }
+      );
+    } else {
+      return res
+        .status(400)
+        .json({
+          error: "Invalid type parameter. Must be 'followers' or 'following'.",
+        });
+    }
+
+    const paginatedUsers = await paginate(follwersModel, pipeline, {
+      page,
+      limit,
+    });
+
+    res.status(200).json(paginatedUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -1,4 +1,6 @@
 const User = require("../Model/User.model");
+const Follow = require("../Model/follwers.model");
+
 const mongoose = require("mongoose");
 const { model } = mongoose;
 const mongoosePaginate = require("mongoose-paginate-v2");
