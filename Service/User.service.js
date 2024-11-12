@@ -46,11 +46,57 @@ exports.User_data_save_before_verify = async (req) => {
   return responseData;
 };
 
+function getRandomGender() {
+  const genders = ["Male", "Female", "Other"];
+  return genders[Math.floor(Math.random() * genders.length)];
+}
+
+function getRandomAge() {
+  return Math.floor(Math.random() * (60 - 18 + 1)) + 18; // Random age between 18 and 60
+}
+
+function getRandomTags() {
+  const tags = ["tag1", "tag2", "tag3", "tag4", "tag5"];
+  const randomTags = [];
+  const numTags = Math.floor(Math.random() * tags.length) + 1; // Random number of tags between 1 and tags.length
+
+  for (let i = 0; i < numTags; i++) {
+    const randomIndex = Math.floor(Math.random() * tags.length);
+    randomTags.push(tags[randomIndex]);
+  }
+
+  return [...new Set(randomTags)]; // Ensure no duplicate tags
+}
+
+exports.addData = async (req, res) => {
+  try {
+    const users = await User.find({}); // Fetch all users
+
+    // Update each user with random gender and age
+    for (let user of users) {
+      user.gender = getRandomGender();
+      user.age = getRandomAge();
+      user.tags = getRandomTags();
+      await user.save(); // Save the updated user
+    }
+
+    res.status(200).json({
+      message: "User data updated successfully",
+      updatedCount: users.length,
+    });
+  } catch (error) {
+    // Handle any errors
+    res.status(500).json({
+      message: "An error occurred while updating user data",
+      error: error.message,
+    });
+  }
+};
 exports.User_full_dataSave = async (req) => {
   let responseData = {};
   // return "sf"
   // console.log("Fz");
-  const { email, password } = req.body;
+  email, (backdornt = req.body);
   try {
     const dataSave = await User.findOne({ email: email });
     if (dataSave) {
@@ -58,7 +104,6 @@ exports.User_full_dataSave = async (req) => {
         password,
         dataSave.password
       );
-      console.log(validPassword);
 
       if (!validPassword) {
         responseData = {
@@ -481,7 +526,6 @@ exports.TeamJoin_RequestApprove_or_deny = async (req) => {
         }
       );
 
-      console.log("data---->", update);
       responseData = {
         data: null,
         status: true,
@@ -588,7 +632,7 @@ exports.profileData = async function (req, res) {
   try {
     const userId = req.user.id;
 
-    const user = await User.findById(userId).select("-password -tokens"); // Exclude sensitive fields
+    const user = await User.findById(userId).select("-password -tokens");
 
     if (!user) {
       return res.status(404).json({
@@ -600,11 +644,12 @@ exports.profileData = async function (req, res) {
     res.json({
       status: true,
       data: user,
-      message: "User profile data retrieved successfully",
+      message: "data send SucessFully",
     });
   } catch (error) {
     console.error("Error retrieving user profile data:", error);
     res.status(500).json({
+      data: [],
       status: false,
       message: "Error retrieving user profile data",
     });
@@ -681,20 +726,14 @@ exports.getUsers = async (req, res) => {
 };
 
 exports.getFollowerList = async (req, res) => {
-  const {
-    page = 1,
-    limit = 10,
-    type = "following", // Type can be "followers" or "following"
-  } = req.query;
+  const { page = 1, limit = 10, type = "following" } = req.query;
 
   const userId = req.user?._id;
-  console.log("reqqq", userId);
 
   try {
     const pipeline = [];
 
     if (type === "followers") {
-      // Get the list of users who follow the current user
       pipeline.push(
         {
           $match: { toUser: userId.toString() },
@@ -723,7 +762,41 @@ exports.getFollowerList = async (req, res) => {
           $unwind: "$followerUser",
         },
         {
-          $replaceRoot: { newRoot: "$followerUser" },
+          $lookup: {
+            from: "followers",
+            let: { followerId: "$fromUserObjectId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$fromUser", userId.toString()] }, // Current user follows the follower
+                      { $eq: ["$toUser", "$$followerId"] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "mutualFollow",
+          },
+        },
+        {
+          $addFields: {
+            isMutual: { $gt: [{ $size: "$mutualFollow" }, 0] },
+          },
+        },
+        {
+          $project: {
+            followerUser: 1,
+            isMutual: 1,
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: ["$followerUser", { isMutual: "$isMutual" }],
+            },
+          },
         }
       );
     } else if (type === "following") {
@@ -760,11 +833,9 @@ exports.getFollowerList = async (req, res) => {
         }
       );
     } else {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid type parameter. Must be 'followers' or 'following'.",
-        });
+      return res.status(400).json({
+        error: "Invalid type parameter. Must be 'followers' or 'following'.",
+      });
     }
 
     const paginatedUsers = await paginate(follwersModel, pipeline, {

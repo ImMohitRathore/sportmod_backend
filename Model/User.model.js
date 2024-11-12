@@ -113,6 +113,13 @@ const UserSchema = new mongoose.Schema({
   createAt: {
     type: String,
   },
+  gender: {
+    type: String,
+  },
+  age: {
+    type: Number,
+  },
+  tags: [],
   updatedAt: {
     type: String,
   },

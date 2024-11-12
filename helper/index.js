@@ -6,8 +6,8 @@ const { model } = mongoose;
 const mongoosePaginate = require("mongoose-paginate-v2");
 
 const paginate = async (model, pipeline = null, options = {}) => {
-  const page = options.page || 1;
-  const limit = options.limit || 10;
+  const page = parseInt(options.page) || 1;
+  const limit = parseInt(options.limit) || 10;
   const skip = (page - 1) * limit;
 
   const paginatedResults = {
@@ -19,7 +19,6 @@ const paginate = async (model, pipeline = null, options = {}) => {
     let result, totalDocs;
 
     if (pipeline) {
-      // Append pagination stages to the pipeline
       const paginationPipeline = [
         ...pipeline,
         { $skip: skip },
@@ -92,6 +91,33 @@ async function createUsersFromTemplate() {
   }
 }
 
-module.exports = { createUsersFromTemplate };
+let isArray = function (a) {
+  return !!a && a.constructor === Array;
+};
 
-module.exports = { paginate };
+let isObject = function (a) {
+  return !!a && a.constructor === Object;
+};
+
+const isAllDataCome = (madatoryFeilds) => {
+  let finalRes = false;
+  let responseData = {
+    data: null,
+    status: false,
+    message: "Please fill the data properly",
+  };
+
+  madatoryFeilds.forEach((feild) => {
+    if (!feild) {
+      finalRes = true;
+    } else {
+      responseData.message = "";
+    }
+  });
+  return {
+    status: finalRes,
+    data: responseData,
+  };
+};
+
+module.exports = { createUsersFromTemplate, paginate, isAllDataCome };

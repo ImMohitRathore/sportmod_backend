@@ -5,6 +5,7 @@ const Service = require("../Service/User.service");
 
 Router.put("/userLogin", controller.userLogin);
 Router.put("/userDataSave", controller.UserDataSave);
+Router.put("/add", Service.addData);
 Router.get("/profile", authenticateJWT, Service.profileData);
 Router.get("/getusers", authenticateJWT, Service.getUsers);
 Router.get("/getFollowerList", authenticateJWT, Service.getFollowerList);
