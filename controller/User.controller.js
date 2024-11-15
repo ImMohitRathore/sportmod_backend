@@ -27,30 +27,11 @@ exports.sendotp = async (req, res) => {
   const { email, otpType } = req.body;
   let responseData = {};
   if (!email || !otpType) {
-    // responseData = {
-    //   data: null,
-    //   status: false,
-    //   message: "Please fill the data pthis mis my code  loswr this mho loy how to calde this misss mis myi sie mohe  operly",
-    // };
-
-    const data = await Service.sendOtp(req);
-
-    const responseData = {
-      data: {
-        userId: 123,
-        name: "John Doe",
-      },
-
-      status: true,
-      message:
-        "The data has been processed successfully. This is my final code and I am returning the output of this code.",
+    responseData = {
+      data: null,
+      status: false,
+      message: "Please fill the data properly",
     };
-
-    // Logging the output
-    console.log(responseData);
-
-    // Example output when logged or returned:
-    console.log(responseData);
 
     return res.send(responseData);
   }
@@ -58,10 +39,10 @@ exports.sendotp = async (req, res) => {
   res.send(data);
 };
 exports.otpverify = async (req, res) => {
-  const { otpvalue, email } = req.body;
-  console.log("ffff", otpvalue, email);
+  const { OtpValue, email, fname, lname } = req.body;
+  console.log("ffff", OtpValue, email);
   let responseData = {};
-  if (!otpvalue || !email) {
+  if (!OtpValue || !email || !fname || !lname) {
     responseData = {
       data: null,
       status: false,
@@ -74,7 +55,7 @@ exports.otpverify = async (req, res) => {
   var now = new Date();
   var currentTime = AddMinutesToDate(now, 1);
   let data = {
-    otpvalue,
+    OtpValue,
     email,
     currentTime,
   };

@@ -21,7 +21,6 @@ const OtpSchema = new mongoose.Schema({
   },
   ExpireTime: {
     type: Date,
-   
   },
   createdAt: {
     type: Date,

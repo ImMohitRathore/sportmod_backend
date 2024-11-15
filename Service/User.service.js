@@ -58,7 +58,7 @@ function getRandomAge() {
 function getRandomTags() {
   const tags = ["tag1", "tag2", "tag3", "tag4", "tag5"];
   const randomTags = [];
-  const numTags = Math.floor(Math.random() * tags.length) + 1; // Random number of tags between 1 and tags.length
+  const numTags = Math.floor(Math.random() * tags.length) + 1; // Ra,șdom number of tags between 1 and tags.length
 
   for (let i = 0; i < numTags; i++) {
     const randomIndex = Math.floor(Math.random() * tags.length);
@@ -95,8 +95,9 @@ exports.addData = async (req, res) => {
 exports.User_full_dataSave = async (req) => {
   let responseData = {};
   // return "sf"
-  // console.log("Fz");
-  email, (backdornt = req.body);
+  const { email, password } = req.body;
+  console.log("Fz", req.body);
+
   try {
     const dataSave = await User.findOne({ email: email });
     if (dataSave) {
@@ -168,7 +169,7 @@ exports.usernameVerfy = async (username) => {
 
 exports.UserDataSave = async (req) => {
   let responseData = {};
-
+  console.log("fffff", req.body);
   try {
     const response = await User.findOneAndUpdate(
       { email: req.body.email },
@@ -209,7 +210,7 @@ exports.SaveUserNamenPass = async (req) => {
   try {
     let update = { $set: req.body };
     let token = null;
-
+    // console.log("dssss", req.body);
     if (req?.body?.username || req?.body?.email) {
       token = jwt.sign({ id: req.body._id, email: req.body.email }, SECRET_KEY);
       const tokenObject = { token: token };
@@ -586,7 +587,7 @@ exports.sendOtp = async function (req, res) {
 
       const user = await User.findOne({ email });
 
-      if (user) {
+      if (user && user?.password?.length > 0) {
         let reData = {
           status: false,
           data: [],

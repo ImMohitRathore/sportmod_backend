@@ -36,60 +36,79 @@ exports.otpSave = async (data) => {
   return responseData;
 };
 
+const findLatestOtp = async (email) => {
+  return await Otp.findOne(
+    { userEmail: email },
+    {},
+    { sort: { createdAt: -1 } }
+  );
+};
+
+const verifyOtpExpiry = (otp, currentTime) => otp.ExpireTime > currentTime;
+
+const saveOrUpdateUser = async (email, fname, lname) => {
+  return await User.findOneAndUpdate(
+    { email },
+    { fname, lname, isverify: true },
+    { new: true, upsert: true }
+  );
+};
+
 exports.otpverifyService = async (req) => {
+  const { email, OtpValue, currentTime, fname, lname } = req;
   let responseData = {};
-  const { email, OtpValue, currentTime } = req;
 
   try {
-    const data = await Otp.findOne({
-      userEmail: req.email,
-      OtpValue: req.otpvalue,
-    })
-      .sort({ createdAt: -1 })
-      .exec();
+    const latestOtp = await findLatestOtp(email);
 
-    if (data) {
-      if (data.ExpireTime > currentTime) {
-        const user = new User({
-          email: req.email,
-          isverify: true,
-        });
-        const response = await user.save();
-        if (response) {
-          responseData = {
-            data: response,
-            status: true,
-            message: "Otp Verify Sucessfully",
-          };
-        } else {
-          responseData = {
-            data: null,
-            status: false,
-            message: "somthing went wrong",
-          };
-        }
-      } else {
-        responseData = {
-          data: null,
-          status: false,
-          message: "Otp time is Expire please resend Otp ",
-        };
-      }
-
-      // console.log("DSgf", ExpireDate, currentTime);
-    } else
+    if (!latestOtp) {
       responseData = {
         data: null,
         status: false,
-        message: "otp is inValid ",
+        message: "No OTP found for the given email.",
       };
-  } catch (e) {
-    console.log("e------>", e);
+      return responseData;
+    }
+
+    if (latestOtp.OtpValue != OtpValue) {
+      responseData = {
+        data: null,
+        status: false,
+        message: "Invalid OTP. Please try again.",
+      };
+      return responseData;
+    }
+
+    if (!verifyOtpExpiry(latestOtp, currentTime)) {
+      responseData = {
+        data: null,
+        status: false,
+        message: "OTP has expired. Please request a new OTP.",
+      };
+      return responseData;
+    }
+
+    const user = await saveOrUpdateUser(email, fname, lname);
+    if (user) {
+      responseData = {
+        data: user,
+        status: true,
+        message: "OTP verified and user data saved successfully.",
+      };
+    } else {
+      responseData = {
+        data: null,
+        status: false,
+        message: "Something went wrong while saving user data.",
+      };
+    }
+  } catch (error) {
     responseData = {
-      data: e,
+      data: error,
       status: false,
-      message: "somthing went wrong",
+      message: "Something went wrong during OTP verification.",
     };
   }
+
   return responseData;
 };
