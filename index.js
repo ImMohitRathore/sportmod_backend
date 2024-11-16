@@ -1,39 +1,38 @@
 const express = require("express");
 const app = express();
-var bodyParser = require("body-parser");
+const bodyParser = require("body-parser");
 require("./connection/DB");
 require("dotenv").config();
 const cors = require("cors");
+const multer = require("multer");
+
+// CORS configuration
 const corsOptions = {
   origin: "*",
   credentials: true,
   optionSuccessStatus: 200,
 };
-
 app.use(cors(corsOptions));
 
-// var PORT = process.env.PORT;
-var PORT = 4000;
-const multer = require("multer");
+// Configure multer for file uploads
 const upload = multer();
 app.use(upload.any());
-// const fileUpload = require("express-fileupload");
-// app.use(fileUpload());
-// const bodyParser = require('body-parser')
-// ...
+
+// Middleware for parsing request bodies
 app.use(bodyParser.text({ type: "/" }));
 app.use(express.json());
-// app.use(bodyParser.json())
-// app.use(bodyParser.urlencoded({extended: false}))
 app.use(express.urlencoded({ extended: true }));
-app.use(require("./route/User.route.js"));
-app.use(require("./route/club.route"));
-app.use(require("./route/tournament.route"));
-app.use(require("./route/team.route"));
-// console.log("port" , PORT);
-app.use(require("./route/game.route"));
 
-app.use(require("./route/ground.route"));
+// Grouped API Routes
+app.use("/user", require("./route/User.route.js")); // All user-related APIs
+app.use("/club", require("./route/club.route")); // All club-related APIs
+app.use("/tournament", require("./route/tournament.route")); // All tournament-related APIs
+app.use("/team", require("./route/team.route")); // All team-related APIs
+app.use("/game", require("./route/game.route")); // All game-related APIs
+app.use("/ground", require("./route/ground.route")); // All ground-related APIs
+
+// Server setup
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`backend runnig on ${PORT} `);
+  console.log(`Backend running on port ${PORT}`);
 });
