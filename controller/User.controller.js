@@ -1,6 +1,8 @@
 const Service = require("../Service/User.service");
 const OtpService = require("../Service/Otp.service");
 const bcrypt = require("bcrypt");
+const { isAllDataCome, checkDataisComing } = require("../helper");
+const { updatePasswordMandatory } = require("../enums");
 function AddMinutesToDate(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);
 }
@@ -23,6 +25,24 @@ exports.userLogin = async (req, res) => {
   return res.send(data);
 };
 
+exports.updatePassword = async (req, res) => {
+  const check = checkDataisComing(updatePasswordMandatory, req.body);
+  if (!check.status) {
+    return res.status(400).send(check);
+  }
+
+  try {
+    const data = await Service.updatePassword(req.body, req.user);
+    res.send(data);
+  } catch (error) {
+    console.error("Error in updatePassword controller:", error);
+    res.status(500).send({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 exports.sendotp = async (req, res) => {
   const { email, otpType } = req.body;
   let responseData = {};
@@ -40,7 +60,7 @@ exports.sendotp = async (req, res) => {
 };
 exports.otpverify = async (req, res) => {
   const { OtpValue, email, fname, lname } = req.body;
-  console.log("ffff", OtpValue, email);
+  // console.log("ffff", OtpValue, email, lname, fname);
   let responseData = {};
   if (!OtpValue || !email || !fname || !lname) {
     responseData = {
@@ -58,6 +78,8 @@ exports.otpverify = async (req, res) => {
     OtpValue,
     email,
     currentTime,
+    fname,
+    lname,
   };
 
   const otpverifyService = await OtpService.otpverifyService(data);

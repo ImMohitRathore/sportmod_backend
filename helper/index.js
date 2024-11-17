@@ -120,4 +120,38 @@ const isAllDataCome = (madatoryFeilds) => {
   };
 };
 
-module.exports = { createUsersFromTemplate, paginate, isAllDataCome };
+const checkDataisComing = (mandatoryFields = [], data) => {
+  let finalRes = true;
+  let responseData = {
+    data: null,
+    status: false,
+    message: "Please fill the data properly",
+  };
+
+  mandatoryFields.forEach((field) => {
+    if (
+      !data.hasOwnProperty(field) ||
+      data[field] === null ||
+      data[field] === ""
+    ) {
+      finalRes = false;
+    }
+  });
+
+  if (finalRes) {
+    responseData = {
+      data: data,
+      status: true,
+      message: "Data is valid",
+    };
+  }
+
+  return responseData;
+};
+
+module.exports = {
+  createUsersFromTemplate,
+  paginate,
+  isAllDataCome,
+  checkDataisComing,
+};

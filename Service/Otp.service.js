@@ -47,6 +47,8 @@ const findLatestOtp = async (email) => {
 const verifyOtpExpiry = (otp, currentTime) => otp.ExpireTime > currentTime;
 
 const saveOrUpdateUser = async (email, fname, lname) => {
+  console.log(email, fname, lname);
+  // return false;
   return await User.findOneAndUpdate(
     { email },
     { fname, lname, isverify: true },

@@ -68,6 +68,75 @@ function getRandomTags() {
   return [...new Set(randomTags)]; // Ensure no duplicate tags
 }
 
+exports.updatePassword = async (body) => {
+  const bcrypt = require("bcrypt");
+
+  try {
+    // Fetch the current user from the database
+    const existingUser = await User.findOne({ email: body.email });
+
+    if (!existingUser) {
+      return {
+        status: false,
+        data: null,
+        message: "User not found",
+      };
+    }
+
+    // Verify the old password
+    const isOldPasswordCorrect = await bcrypt.compare(
+      body.oldpassword,
+      existingUser.password
+    );
+
+    if (!isOldPasswordCorrect) {
+      return {
+        status: false,
+        data: null,
+        message: "Old password is incorrect",
+      };
+    }
+
+    // Check if the new password matches the old one
+    const isNewPasswordSame = await bcrypt.compare(
+      body.newpassword,
+      existingUser.password
+    );
+
+    if (isNewPasswordSame) {
+      return {
+        status: false,
+        data: null,
+        message: "New password cannot be the same as the old password",
+      };
+    }
+
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(body.newpassword, saltRounds);
+
+    // Update the user's password and retrieve the updated document
+    existingUser.password = hashedPassword;
+    await existingUser.save();
+
+    // Refetch the entire document to include all the latest changes
+    const updatedUser = await User.findOne({ email: body.email });
+
+    return {
+      status: true,
+      data: updatedUser, // Return the entire document
+      message: "Password updated successfully",
+    };
+  } catch (error) {
+    console.error("Error in updatePassword service:", error);
+    return {
+      status: false,
+      data: null,
+      message: "Failed to update password",
+    };
+  }
+};
+
 exports.addData = async (req, res) => {
   try {
     const users = await User.find({}); // Fetch all users

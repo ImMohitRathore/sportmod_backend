@@ -109,6 +109,9 @@ const UserSchema = new mongoose.Schema({
     holderName: {
       type: String,
     },
+    upiId: {
+      type: String,
+    },
   },
   createAt: {
     type: String,

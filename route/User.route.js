@@ -11,12 +11,18 @@ Router.get("/getusers", authenticateJWT, Service.getUsers);
 Router.get("/getFollowerList", authenticateJWT, Service.getFollowerList);
 Router.post("/sendOtp", controller.sendotp);
 Router.post("/otpverify", controller.otpverify);
+Router.put("/updatePassword", controller.updatePassword);
 Router.put("/usernameVerfy", controller.usernameVerfy);
-Router.put("/sendFreindRequiest", controller.sendFreindRequest);
-Router.put("/followUser", controller.followUser);
+Router.put(
+  "/sendFreindRequiest",
+  authenticateJWT,
+  controller.sendFreindRequest
+);
+Router.put("/followUser", authenticateJWT, controller.followUser);
 Router.patch("/RequestApprove_or_deny/:id", controller.RequestApprove_or_deny);
 Router.patch(
   "/TeamJoin_RequestApprove_or_deny/:id",
+  authenticateJWT,
   controller.TeamJoin_RequestApprove_or_deny
 );
 
