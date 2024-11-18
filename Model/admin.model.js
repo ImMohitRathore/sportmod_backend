@@ -14,6 +14,7 @@ const AdminSchema = new mongoose.Schema({
     type:String
   } ,
 
+  
 
   status:{
     type:Boolean

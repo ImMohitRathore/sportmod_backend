@@ -10,3 +10,4 @@ Router.delete("/delete_admin/:id", controller.delete_admin); // Delete Admin
 Router.post("/login_admin", controller.login_admin); // Login Admin and save token
 
 module.exports = Router;
+

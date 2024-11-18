@@ -27,6 +27,7 @@ exports.update_admin = async (req, res) => {
   res.send(data);
 };
 
+
 exports.get_admin = async (req, res) => {
   const { id } = req.params;
   const data = await service.get_admin(id);

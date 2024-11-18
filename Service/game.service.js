@@ -28,6 +28,7 @@ exports.create_game = async (req) => {
     });
 
     // console.log("otp", otp);
+    
     const dataSave = await game.save();
     responseData = {
       data: null,

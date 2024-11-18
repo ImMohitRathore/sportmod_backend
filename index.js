@@ -24,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // dashboard Routes
+
 app.use("/admin", require("./route/admin.route.js")); // All user-related APIs
 
 
