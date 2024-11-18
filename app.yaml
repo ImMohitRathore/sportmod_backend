@@ -1,0 +1,14 @@
+runtime: nodejs18  # Or the Node.js version you're using
+env: standard
+
+handlers:
+  - url: /static
+    static_dir: public
+  - url: /.*
+    script: auto  # This will route requests to your Express app
+
+env_variables:
+  NODE_ENV: 'production'
+
+# If your entry file is index.js, you can use the 'entrypoint' configuration
+entrypoint: node index.js
