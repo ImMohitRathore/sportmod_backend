@@ -48,6 +48,6 @@ exports.create_game = async (req) => {
 
 exports.get_game = async (req, res) => {
   filterdata = await Game.find({});
-
+  // console.log("ffff", filterdata);
   res.send(filterdata);
 };

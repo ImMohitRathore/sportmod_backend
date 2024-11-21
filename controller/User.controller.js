@@ -103,6 +103,8 @@ exports.usernameVerfy = async (req, res) => {
 };
 exports.UserDataSave = async (req, res) => {
   // Check if a password is provided in the request
+  // console.log("req", req.body);
+  // return;
   if (req.body.password) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);

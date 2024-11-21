@@ -1,10 +1,17 @@
 var cloudinary = require("../cloudnary/cloudnary");
 var streamifier = require("streamifier");
+var sharp = require("sharp"); // Import sharp
+
 exports.uploadFromBuffer = async (req) => {
-  // console.log("data", req.files);
   var alldata = req.files;
-  const finatdata = [];
+  const finalData = [];
+
   const data1 = alldata.map(async (ele) => {
+    const compressedBuffer = await sharp(ele.buffer)
+      .resize(800, 800, { fit: "inside" }) // Resize to fit within 800x800 pixels
+      .jpeg({ quality: 80 }) // Compress to 80% quality (adjust as needed)
+      .toBuffer();
+
     const response = new Promise((resolve, reject) => {
       let cld_upload_stream = cloudinary.uploader.upload_stream(
         {
@@ -13,29 +20,20 @@ exports.uploadFromBuffer = async (req) => {
         (error, result) => {
           if (result) {
             resolve(result);
-            //    console.log('dddd',result);
           } else {
             reject(error);
           }
         }
       );
 
-      const data = streamifier
-        .createReadStream(ele.buffer)
-        .pipe(cld_upload_stream);
+      streamifier.createReadStream(compressedBuffer).pipe(cld_upload_stream);
     });
 
     const rowdata = await response;
-    // return rowdata
-    // console.log("datass" , rowdata.secure_url);
-    finatdata.push({ url: rowdata.secure_url, fieldname: ele.fieldname });
+    finalData.push({ url: rowdata.secure_url, fieldname: ele.fieldname });
   });
 
   await Promise.all(data1);
-  // if(finatdata.length > 1){
 
-  // console.log("datassss->"  ,  finatdata);
-  // }
-
-  return finatdata;
+  return finalData;
 };
