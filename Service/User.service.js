@@ -7,6 +7,7 @@ const OtpService = require("./Otp.service");
 const jwt = require("jsonwebtoken");
 const { paginate } = require("../helper");
 const follwersModel = require("../Model/follwers.model");
+const { uploadFromBuffer } = require("../cloudnary/imageUploader");
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -238,8 +239,19 @@ exports.usernameVerfy = async (username) => {
 
 exports.UserDataSave = async (req) => {
   let responseData = {};
-  console.log("fffff", req.body);
+
   try {
+    // return false;
+    if (req.files) {
+      let imageurl = await uploadFromBuffer(req);
+      console.log(imageurl);
+      if (imageurl) {
+        req.body.profile = imageurl?.[0]?.["url"];
+      }
+    }
+
+    // console.log("rww", req.files);
+    // return false;
     const response = await User.findOneAndUpdate(
       { email: req.body.email },
       {
@@ -270,7 +282,7 @@ exports.UserDataSave = async (req) => {
     };
   }
 
-  console.log(responseData);
+  // console.log(responseData);
   return responseData;
 };
 

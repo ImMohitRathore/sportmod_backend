@@ -26,6 +26,7 @@ const paginate = async (model, pipeline = null, options = {}) => {
       ];
 
       result = await model.aggregate(paginationPipeline);
+      console.log("ressss", result);
       totalDocs = await model.countDocuments(pipeline[0]?.$match || {});
     } else {
       // Default pagination
