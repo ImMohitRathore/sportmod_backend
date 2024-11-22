@@ -725,6 +725,34 @@ exports.profileData = async function (req, res) {
     });
   }
 };
+
+exports.UserDetail = async function (req, res) {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId).select("-password -tokens");
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      status: true,
+      data: user,
+      message: "data send SucessFully",
+    });
+  } catch (error) {
+    console.error("Error retrieving user profile data:", error);
+    res.status(500).json({
+      data: [],
+      status: false,
+      message: "Error retrieving user profile data",
+    });
+  }
+};
 exports.getUsers = async (req, res) => {
   const {
     page,
@@ -900,6 +928,158 @@ exports.getFollowerList = async (req, res) => {
         },
         {
           $replaceRoot: { newRoot: "$followingUser" },
+        }
+      );
+    } else {
+      return res.status(400).json({
+        error: "Invalid type parameter. Must be 'followers' or 'following'.",
+      });
+    }
+
+    const paginatedUsers = await paginate(follwersModel, pipeline, {
+      page,
+      limit,
+    });
+
+    res.status(200).json(paginatedUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.getFollowerListOtherUser = async (req, res) => {
+  const { page = 1, limit = 10, type = "following" } = req.query;
+  const userId = req.params.id; // The user whose list is being fetched
+  const loggedInUserId = req.user?._id; // The logged-in user (from middleware)
+
+  try {
+    const pipeline = [];
+
+    if (type === "followers") {
+      // Fetch followers of the user
+      pipeline.push(
+        {
+          $match: { toUser: userId.toString() },
+        },
+        {
+          $match: {
+            $expr: { $eq: [{ $strLenCP: "$fromUser" }, 24] }, // Validate ObjectId
+          },
+        },
+        {
+          $addFields: { fromUserObjectId: { $toObjectId: "$fromUser" } },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "fromUserObjectId",
+            foreignField: "_id",
+            as: "followerUser",
+          },
+        },
+        { $unwind: "$followerUser" },
+        {
+          $lookup: {
+            from: "followers",
+            let: { followerId: "$fromUserObjectId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$fromUser", loggedInUserId.toString()] }, // Logged-in user follows the follower
+                      { $eq: ["$toUser", "$$followerId"] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "mutualFollow",
+          },
+        },
+        {
+          $addFields: {
+            FollowingByMe: { $gt: [{ $size: "$mutualFollow" }, 0] },
+          },
+        },
+        {
+          $project: {
+            followerUser: 1,
+            FollowingByMe: 1,
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [
+                "$followerUser",
+                { FollowingByMe: "$FollowingByMe" },
+              ],
+            },
+          },
+        }
+      );
+    } else if (type === "following") {
+      // Fetch the users the current user is following
+      pipeline.push(
+        {
+          $match: { fromUser: userId.toString() },
+        },
+        {
+          $match: {
+            $expr: { $eq: [{ $strLenCP: "$toUser" }, 24] }, // Validate ObjectId
+          },
+        },
+        {
+          $addFields: { toUserObjectId: { $toObjectId: "$toUser" } },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "toUserObjectId",
+            foreignField: "_id",
+            as: "followingUser",
+          },
+        },
+        { $unwind: "$followingUser" },
+        {
+          $lookup: {
+            from: "followers",
+            let: { followingId: "$toUserObjectId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$fromUser", loggedInUserId.toString()] }, // Logged-in user follows the user
+                      { $eq: ["$toUser", "$$followingId"] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "mutualFollow",
+          },
+        },
+        {
+          $addFields: {
+            FollowingByMe: { $gt: [{ $size: "$mutualFollow" }, 0] },
+          },
+        },
+        {
+          $project: {
+            followingUser: 1,
+            FollowingByMe: 1,
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [
+                "$followingUser",
+                { FollowingByMe: "$FollowingByMe" },
+              ],
+            },
+          },
         }
       );
     } else {
