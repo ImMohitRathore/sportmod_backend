@@ -19,17 +19,21 @@ const paginate = async (model, pipeline = null, options = {}) => {
     let result, totalDocs;
 
     if (pipeline) {
+      // For total count
+      const totalCountPipeline = [...pipeline, { $count: "totalCount" }];
+      const totalCountResult = await model.aggregate(totalCountPipeline);
+      totalDocs = totalCountResult[0]?.totalCount || 0;
+
+      // For paginated data
       const paginationPipeline = [
         ...pipeline,
         { $skip: skip },
         { $limit: limit },
+        ...(options.sort ? [{ $sort: options.sort }] : []), // Dynamic sorting
       ];
-
       result = await model.aggregate(paginationPipeline);
-      console.log("ressss", result);
-      totalDocs = await model.countDocuments(pipeline[0]?.$match || {});
     } else {
-      // Default pagination
+      // Without pipeline
       result = await model
         .find({})
         .skip(skip)
@@ -46,15 +50,17 @@ const paginate = async (model, pipeline = null, options = {}) => {
     paginatedResults.totalCount = totalDocs;
     paginatedResults.data = result;
 
-    let obj = {
+    return {
       status: true,
       data: paginatedResults,
       message: "Data fetched successfully",
     };
-    return obj;
   } catch (error) {
-    console.log("err", error);
-    throw new Error("Pagination error: " + error.message);
+    console.log("Pagination error:", error);
+    return {
+      status: false,
+      message: "Pagination failed: " + error.message,
+    };
   }
 };
 
