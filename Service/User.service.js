@@ -740,8 +740,10 @@ exports.profileData = async function (req, res) {
 
 exports.UserDetail = async function (req, res) {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id; // The user being requested
+    const loggedInUserId = String(req.user?._id); // The logged-in user's ID
 
+    // Fetch the user without sensitive fields
     const user = await User.findById(userId).select("-password -tokens");
 
     if (!user) {
@@ -751,10 +753,20 @@ exports.UserDetail = async function (req, res) {
       });
     }
 
+    // Check if the logged-in user follows this user
+    const isFollowing = await follwersModel.exists({
+      fromUser: loggedInUserId, // The logged-in user's ID
+      toUser: userId, // The user being requested
+    });
+
+    // Send the response with the follow status
     res.json({
       status: true,
-      data: user,
-      message: "data send SucessFully",
+      data: {
+        ...user.toObject(), // Convert Mongoose document to plain object
+        isFollowing: !!isFollowing, // Boolean indicating follow status
+      },
+      message: "Data sent successfully",
     });
   } catch (error) {
     console.error("Error retrieving user profile data:", error);
@@ -765,6 +777,7 @@ exports.UserDetail = async function (req, res) {
     });
   }
 };
+
 exports.getUsers = async (req, res) => {
   const {
     page,
