@@ -1012,7 +1012,7 @@ exports.getFollowerList = async (req, res) => {
             newRoot: {
               $mergeObjects: [
                 "$followerDetails",
-                { isFollowback: "$isFollowback" },
+                { isFollowing: "$isFollowback" },
               ],
             },
           }, // Merge the follower details and 'isFollowback' key into a flat structure
@@ -1047,7 +1047,6 @@ exports.getFollowerList = async (req, res) => {
                   fname: 1,
                   lname: 1,
                   email: 1,
-                  profile: 1, // Add fields you want for the followed user
                 },
               },
             ],
@@ -1060,6 +1059,11 @@ exports.getFollowerList = async (req, res) => {
         {
           $replaceRoot: {
             newRoot: "$followingDetails", // Step 4: Restructure the output to show only user details
+          },
+        },
+        {
+          $addFields: {
+            isFollowing: true, // Add a new field "following" with the value true
           },
         }
       );
