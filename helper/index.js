@@ -4,6 +4,8 @@ const Follow = require("../Model/follwers.model");
 const mongoose = require("mongoose");
 const { model } = mongoose;
 const mongoosePaginate = require("mongoose-paginate-v2");
+const { publishNotification } = require("../webSocket/connection");
+const notificationModel = require("../Model/notification.model");
 
 const paginate = async (model, pipeline = null, options = {}) => {
   const page = parseInt(options.page) || 1;
@@ -156,9 +158,71 @@ const checkDataisComing = (mandatoryFields = [], data) => {
   return responseData;
 };
 
+/**
+ * Generic function to handle notifications
+ * @param {Object} payload - Notification payload
+ * @param {String} payload.userId - Receiver ID
+ * @param {String} payload.fromId - Sender ID
+ * @param {String} payload.type - Notification type (e.g., follow, app, team, etc.)
+ * @param {String} payload.message - Notification message
+ * @param {String} payload.sourceId - Related source ID (optional, e.g., team ID, post ID)
+ * @returns {Object} - Status of operation
+ */
+const handleNotification = async ({
+  userId,
+  fromId,
+  type,
+  message,
+  sourceId,
+  userInfo,
+}) => {
+  try {
+    // 1. Save notification in the database
+    const notification = new notificationModel({
+      userId,
+      fromId,
+      type,
+      message,
+      sourceId,
+      seenStatus: false,
+      countStatus: true,
+      userInfo,
+    });
+
+    await notification.save();
+
+    console.log(`Notification saved for user ${userId}`);
+
+    // 2. Send real-time notification using WebSocket
+    const notificationPayload = {
+      type,
+      message,
+      fromId,
+      sourceId,
+      userInfo,
+    };
+
+    await publishNotification(userId, notificationPayload);
+
+    console.log(`Real-time notification sent to user ${userId}`);
+
+    return {
+      status: true,
+      message: "Notification processed successfully",
+    };
+  } catch (error) {
+    console.error("Error processing notification:", error);
+    return {
+      status: false,
+      message: `Error processing notification: ${error.message}`,
+    };
+  }
+};
+
 module.exports = {
   createUsersFromTemplate,
   paginate,
   isAllDataCome,
+  handleNotification,
   checkDataisComing,
 };

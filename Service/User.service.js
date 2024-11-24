@@ -5,7 +5,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const bcrypt = require("bcrypt");
 const OtpService = require("./Otp.service");
 const jwt = require("jsonwebtoken");
-const { paginate } = require("../helper");
+const { paginate, handleNotification } = require("../helper");
 const follwersModel = require("../Model/follwers.model");
 const { uploadFromBuffer } = require("../cloudnary/imageUploader");
 require("dotenv").config();
@@ -451,8 +451,26 @@ exports.followUser = async (req) => {
           message: `Followed user ${userId} successfully`,
         };
       }
-    }
 
+      const sender = await User.findById(senderId);
+      const notificationMessage = `${sender.fname} ${sender.lname} has followed you`;
+      let userInfo = {
+        fname: sender?.fname,
+        lname: sender?.lname,
+        profile: sender?.profile,
+      };
+
+      const notificationStatus = await handleNotification({
+        userId, // Receiver
+        fromId: senderId, // Sender
+        type: "follow", // Notification type
+        message: notificationMessage,
+        sourceId: senderId, // Source ID
+        userInfo,
+      });
+
+      console.log(`Notification sent to user ${userId}:`, notificationStatus);
+    }
     return responseData;
   } catch (error) {
     console.error("Error updating followers list:", error);
@@ -928,7 +946,6 @@ exports.getFollowerList = async (req, res) => {
   const { page = 1, limit = 10, type = "following" } = req.query;
 
   const userId = req.user?._id;
-  console.log(userId);
 
   try {
     const pipeline = [];
@@ -1166,7 +1183,6 @@ exports.getMutualList = async (req, res) => {
       });
     }
 
-    console.log("page , ", page, limit, pipeline, String(userId), profileId);
     const paginatedUsers = await paginate(follwersModel, pipeline, {
       page,
       limit,
