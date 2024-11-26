@@ -48,6 +48,7 @@ exports.getNotification = async (req, res) => {
         countStatus: 1,
         userInfo: 1,
         isFollowing: 1,
+        createdAt: 1,
       },
     },
   ];

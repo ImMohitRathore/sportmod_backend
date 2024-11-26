@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const { paginate, handleNotification } = require("../helper");
 const follwersModel = require("../Model/follwers.model");
 const { uploadFromBuffer } = require("../cloudnary/imageUploader");
+const notificationModel = require("../Model/notification.model");
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -421,6 +422,8 @@ exports.followUser = async (req) => {
           data: { _id: userId, isFollowing: false },
           message: `Unfollowed user ${userId} successfully`,
         };
+
+        await notificationModel.deleteOne({ fromId: senderId, userId: userId });
       } else {
         await new follwersModel({
           fromUser: senderId,
