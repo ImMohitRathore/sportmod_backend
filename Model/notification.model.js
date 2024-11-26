@@ -28,6 +28,10 @@ const notificationSchema = new mongoose.Schema({
   countStatus: {
     type: Boolean,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now, // Sets the current timestamp as the default value
+  },
 });
 
 module.exports = mongoose.model("Notifications", notificationSchema);

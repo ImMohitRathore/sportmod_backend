@@ -450,26 +450,25 @@ exports.followUser = async (req) => {
           status: true,
           message: `Followed user ${userId} successfully`,
         };
+
+        const sender = await User.findById(senderId);
+        const notificationMessage = `${sender.fname} ${sender.lname} has followed you`;
+        let userInfo = {
+          fname: sender?.fname,
+          lname: sender?.lname,
+          profile: sender?.profile,
+        };
+
+        const notificationStatus = await handleNotification({
+          userId, // Receiver
+          fromId: senderId, // Sender
+          type: "follow", // Notification type
+          message: notificationMessage,
+          sourceId: senderId, // Source ID
+          userInfo,
+        });
+        console.log(`Notification sent to user ${userId}:`, notificationStatus);
       }
-
-      const sender = await User.findById(senderId);
-      const notificationMessage = `${sender.fname} ${sender.lname} has followed you`;
-      let userInfo = {
-        fname: sender?.fname,
-        lname: sender?.lname,
-        profile: sender?.profile,
-      };
-
-      const notificationStatus = await handleNotification({
-        userId, // Receiver
-        fromId: senderId, // Sender
-        type: "follow", // Notification type
-        message: notificationMessage,
-        sourceId: senderId, // Source ID
-        userInfo,
-      });
-
-      console.log(`Notification sent to user ${userId}:`, notificationStatus);
     }
     return responseData;
   } catch (error) {

@@ -1,13 +1,27 @@
 const notificationModel = require("../Model/notification.model");
+const { paginate } = require("../helper");
 
 exports.getNotification = async (req, res) => {
   const { page, limit } = req.query;
 
-  const userId = req.user?._id;
+  const userId = req.params?.id;
+  console.log("ddd", userId);
 
   const pipeline = [
-    { $match: { userId } },
-    // Join with the Users collection using fromId
+    { $match: { userId: userId } },
+    {
+      $addFields: {
+        fromId: {
+          $convert: {
+            input: "$fromId",
+            to: "objectId",
+            onError: "$fromId",
+            onNull: "$fromId",
+          },
+        },
+      },
+    },
+
     {
       $lookup: {
         from: "users", // Collection name for users
@@ -16,9 +30,7 @@ exports.getNotification = async (req, res) => {
         as: "fromUser", // Alias for joined data
       },
     },
-    // Unwind the fromUser array (to flatten it)
     { $unwind: "$fromUser" },
-    // Project the required fields
     {
       $project: {
         _id: 1,
@@ -29,17 +41,10 @@ exports.getNotification = async (req, res) => {
         countStatus: 1,
         "fromUser.fname": 1,
         "fromUser.lname": 1,
+        "fromUser.profile": 1,
       },
     },
   ];
-
-  if (isShortbyFollowers) {
-    pipeline.push({
-      $sort: {
-        isFollowing: -1,
-      },
-    });
-  }
 
   try {
     const paginatedUsers = await paginate(notificationModel, pipeline, {
