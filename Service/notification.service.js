@@ -8,29 +8,36 @@ exports.getNotification = async (req, res) => {
   console.log("ddd", userId);
 
   const pipeline = [
-    { $match: { userId: userId } },
+    {
+      $match: {
+        userId: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "followers",
+        let: { userId: "$userId", fromId: "$fromId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$fromUser", "$$userId"] },
+                  { $eq: ["$toUser", "$$fromId"] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "filteredFollowers",
+      },
+    },
     {
       $addFields: {
-        fromId: {
-          $convert: {
-            input: "$fromId",
-            to: "objectId",
-            onError: "$fromId",
-            onNull: "$fromId",
-          },
-        },
+        isFollowing: { $gt: [{ $size: "$filteredFollowers" }, 0] },
       },
     },
 
-    {
-      $lookup: {
-        from: "users", // Collection name for users
-        localField: "fromId", // Field in Notifications
-        foreignField: "_id", // Field in Users
-        as: "fromUser", // Alias for joined data
-      },
-    },
-    { $unwind: "$fromUser" },
     {
       $project: {
         _id: 1,
@@ -39,9 +46,8 @@ exports.getNotification = async (req, res) => {
         sourceId: 1,
         seenStatus: 1,
         countStatus: 1,
-        "fromUser.fname": 1,
-        "fromUser.lname": 1,
-        "fromUser.profile": 1,
+        userInfo: 1,
+        isFollowing: 1,
       },
     },
   ];
