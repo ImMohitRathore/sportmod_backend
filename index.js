@@ -1,10 +1,12 @@
 const express = require("express");
 const app = express();
+const http = require("http");
 const bodyParser = require("body-parser");
 require("./connection/DB");
 require("dotenv").config();
 const cors = require("cors");
 const multer = require("multer");
+const { initializeWebSocket } = require("./webSocket/connection");
 
 // CORS configuration
 const corsOptions = {
@@ -31,6 +33,7 @@ app.use("/admin", require("./route/admin.route.js")); // All user-related APIs
 
 // Grouped API Routes
 app.use("/user", require("./route/User.route.js")); // All user-related APIs
+app.use("/notification", require("./route/notification.js")); // All notification-related APIs
 app.use("/club", require("./route/club.route")); // All club-related APIs
 app.use("/tournament", require("./route/tournament.route")); // All tournament-related APIs
 app.use("/team", require("./route/team.route")); // All team-related APIs
@@ -52,8 +55,13 @@ app.get("/", (req, res) => {
   `);
 });
 
+
+// Create HTTP server and bind WebSocket
+const server = http.createServer(app);
+initializeWebSocket(server);
+
 // Server setup
-const PORT = process.env.PORT || 4001;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });

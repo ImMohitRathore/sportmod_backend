@@ -11,6 +11,7 @@ Router.get("/UserDetail/:id", authenticateJWT, Service.UserDetail);
 
 Router.get("/getusers", authenticateJWT, Service.getUsers);
 Router.get("/getFollowerList", authenticateJWT, Service.getFollowerList);
+Router.get("/getMutualList/:profileId", authenticateJWT, Service.getMutualList);
 Router.get(
   "/getFollowerList_other_user/:id",
   authenticateJWT,
